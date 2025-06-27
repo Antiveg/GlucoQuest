@@ -20,7 +20,8 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-    }
+    },
+    "typeRoots": ["./src/types", "./node_modules/@types"]
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts", "src/database/seeders/1-seed-test.js", "src/database/migrations/1-create-test.js"],
   "exclude": ["node_modules"]

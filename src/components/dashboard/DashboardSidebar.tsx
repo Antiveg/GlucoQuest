@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { signOut } from "next-auth/react";
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -132,6 +133,7 @@ export default function DashboardSidebar({
           <Button
             variant="ghost"
             className="cursor-pointer w-full h-fit justify-start gap-4 p-3 rounded-xl font-bold text-red-600 transition-colors hover:bg-red-100"
+            onClick={() => signOut({ callbackUrl: "/auth/signin" })}
           >
             <LogOut className="h-4 w-4 mr-2" />
             logout
