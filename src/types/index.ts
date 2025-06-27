@@ -11,7 +11,7 @@ export interface GlucoseReading {
   user_id: number;
   time: string; // ISO timestamp string
   glucose: number; // blood glucose level in mg/dL
-  tag?: string; // optional contextual tag
+  tag: string; // optional contextual tag
   notes?: string;
   created_at: string;
 }
@@ -41,8 +41,8 @@ export interface Task {
   id: number;
   user_id: number;
   task: string;
-  deadline?: string;
-  details?: string;
+  deadline: string;
+  details: string;
   done: boolean;
   created_at: string;
 }

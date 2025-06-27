@@ -36,40 +36,72 @@ import {
 } from "recharts";
 import { format, addDays, subDays } from "date-fns";
 import Link from "next/link";
+import { GlucoseReading } from "@/types";
 
-const mockGlucoseData = [
+const mockGlucoseData: GlucoseReading[] = [
   {
+    id: 1,
+    user_id: 101,
     time: "2025-06-13T07:00:00",
-    value: 95,
+    glucose: 95,
     tag: "Fasting",
     notes: "Woke up feeling good",
+    created_at: "2025-06-13T07:05:00",
   },
   {
+    id: 2,
+    user_id: 101,
     time: "2025-06-13T09:30:00",
-    value: 165,
+    glucose: 165,
     tag: "After Breakfast",
     notes: "Oatmeal & berries",
+    created_at: "2025-06-13T09:35:00",
   },
-  { time: "2025-06-13T12:45:00", value: 110, tag: "Before Lunch", notes: "" },
   {
+    id: 3,
+    user_id: 101,
+    time: "2025-06-13T12:45:00",
+    glucose: 110,
+    tag: "Before Lunch",
+    notes: "",
+    created_at: "2025-06-13T12:50:00",
+  },
+  {
+    id: 4,
+    user_id: 101,
     time: "2025-06-13T14:30:00",
-    value: 185,
+    glucose: 185,
     tag: "After Lunch",
     notes: "Sandwich and chips",
+    created_at: "2025-06-13T14:35:00",
   },
   {
+    id: 5,
+    user_id: 101,
     time: "2025-06-13T18:00:00",
-    value: 75,
+    glucose: 75,
     tag: "Before Dinner",
     notes: "Felt a little shaky",
+    created_at: "2025-06-13T18:05:00",
   },
   {
+    id: 6,
+    user_id: 101,
     time: "2025-06-13T20:00:00",
-    value: 140,
+    glucose: 140,
     tag: "After Dinner",
     notes: "Chicken and rice",
+    created_at: "2025-06-13T20:05:00",
   },
-  { time: "2025-06-13T22:30:00", value: 120, tag: "Bedtime", notes: "" },
+  {
+    id: 7,
+    user_id: 101,
+    time: "2025-06-13T22:30:00",
+    glucose: 120,
+    tag: "Bedtime",
+    notes: "",
+    created_at: "2025-06-13T22:35:00",
+  },
 ];
 
 export default function DailyGlucosePage() {
@@ -81,12 +113,21 @@ export default function DailyGlucosePage() {
   // --- CALCULATIONS ---
   const dailyStats = useMemo(() => {
     if (mockGlucoseData.length === 0) {
-      return { avg: 0, high: { value: 0 }, low: { value: 0 }, timeInRange: 0 };
+      return {
+        avg: 0,
+        high: { glucose: 0 },
+        low: { glucose: 0 },
+        timeInRange: 0,
+      };
     }
-    const values = mockGlucoseData.map((d) => d.value);
+    const values = mockGlucoseData.map((d) => d.glucose);
     const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
-    const high = mockGlucoseData.reduce((p, c) => (p.value > c.value ? p : c));
-    const low = mockGlucoseData.reduce((p, c) => (p.value < c.value ? p : c));
+    const high = mockGlucoseData.reduce((p, c) =>
+      p.glucose > c.glucose ? p : c
+    );
+    const low = mockGlucoseData.reduce((p, c) =>
+      p.glucose < c.glucose ? p : c
+    );
     const inRangeCount = values.filter((v) => v >= 70 && v <= 180).length;
     const timeInRange = Math.round((inRangeCount / values.length) * 100);
     return { avg, high, low, timeInRange };
@@ -96,12 +137,12 @@ export default function DailyGlucosePage() {
     return mockGlucoseData.map((d) => ({
       ...d,
       name: format(new Date(d.time), "HH:mm"),
-      glucose: unit === "mmol/L" ? (d.value / 18).toFixed(1) : d.value,
+      glucose: unit === "mmol/L" ? (d.glucose / 18).toFixed(1) : d.glucose,
     }));
   }, [unit]);
 
   const outOfRangeAlerts = mockGlucoseData.filter(
-    (d) => d.value < 70 || d.value > 180
+    (d) => d.glucose < 70 || d.glucose > 180
   );
 
   return (
@@ -237,7 +278,7 @@ export default function DailyGlucosePage() {
                   />
                   <SummaryStatCard
                     title="Highest"
-                    value={dailyStats.high.value}
+                    value={dailyStats.high.glucose}
                     unit={unit}
                     subtext={`at ${format(Date.now(), "HH:mm")}`}
                     icon={ArrowUp}
@@ -245,7 +286,7 @@ export default function DailyGlucosePage() {
                   />
                   <SummaryStatCard
                     title="Lowest"
-                    value={dailyStats.low.value}
+                    value={dailyStats.low.glucose}
                     unit={unit}
                     subtext={`at ${format(Date.now(), "HH:mm")}`}
                     icon={ArrowDown}
@@ -300,8 +341,8 @@ export default function DailyGlucosePage() {
                         </TableCell>
                         <TableCell className="font-semibold text-lg">
                           {unit === "mmol/L"
-                            ? (reading.value / 18).toFixed(1)
-                            : reading.value}
+                            ? (reading.glucose / 18).toFixed(1)
+                            : reading.glucose}
                         </TableCell>
                         <TableCell>
                           <TagLabel tag={reading.tag.toString()} />
@@ -368,7 +409,7 @@ const SummaryStatCard = ({
 );
 
 interface Alert {
-  value: number;
+  glucose: number;
   time: string;
 }
 
@@ -378,7 +419,7 @@ interface AlertCardProps {
 }
 
 const AlertCard = ({ alert, unit }: AlertCardProps) => {
-  const isHigh = alert.value > 180;
+  const isHigh = alert.glucose > 180;
   return (
     <div
       className={`flex items-center gap-4 p-3 rounded-xl border-2 border-black ${
@@ -394,7 +435,9 @@ const AlertCard = ({ alert, unit }: AlertCardProps) => {
         <p className="font-bold">{isHigh ? "High Reading" : "Low Reading"}</p>
         <p className="text-sm text-gray-800">
           <span className="font-semibold">
-            {unit === "mmol/L" ? (alert.value / 18).toFixed(1) : alert.value}{" "}
+            {unit === "mmol/L"
+              ? (alert.glucose / 18).toFixed(1)
+              : alert.glucose}{" "}
             {unit}
           </span>{" "}
           at {format(new Date(alert.time), "HH:mm")}
