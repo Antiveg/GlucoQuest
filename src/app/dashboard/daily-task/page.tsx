@@ -15,99 +15,135 @@ import {
   Clock,
 } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
+import { Task } from "@/types";
+import Link from "next/link";
 
-const initialTasks = [
+const initialTasks: Task[] = [
   {
     id: 1,
+    user_id: 101,
     task: "Morning blood sugar",
     deadline: "07:00 AM",
     details: "Measure blood sugar before meal",
     done: false,
+    created_at: "2025-06-13T06:50:00",
   },
   {
     id: 2,
+    user_id: 101,
     task: "Morning long-acting insulin",
     deadline: "07:05 AM",
     details: "Inject basal insulin dose",
     done: true,
+    created_at: "2025-06-13T06:55:00",
   },
   {
     id: 3,
+    user_id: 101,
     task: "Take rapid-acting insulin (before breakfast)",
     deadline: "07:10 AM",
     details: "Inject before breakfast",
     done: false,
+    created_at: "2025-06-13T07:00:00",
   },
   {
     id: 4,
+    user_id: 101,
     task: "Eat breakfast",
     deadline: "07:15 AM",
     details: "",
     done: false,
+    created_at: "2025-06-13T07:05:00",
   },
   {
     id: 5,
+    user_id: 101,
     task: "Check blood sugar (mid-morning)",
     deadline: "10:00 AM",
     details: "",
     done: false,
+    created_at: "2025-06-13T09:00:00",
   },
   {
     id: 6,
+    user_id: 101,
     task: "Check blood sugar (lunch)",
     deadline: "12:00 PM",
     details: "",
     done: false,
+    created_at: "2025-06-13T11:00:00",
   },
   {
     id: 7,
+    user_id: 101,
     task: "Take rapid-acting insulin (lunch)",
     deadline: "12:05 PM",
     details: "Inject before lunch",
     done: false,
+    created_at: "2025-06-13T11:05:00",
   },
-  { id: 8, task: "Eat lunch", deadline: "12:10 PM", details: "", done: false },
+  {
+    id: 8,
+    user_id: 101,
+    task: "Eat lunch",
+    deadline: "12:10 PM",
+    details: "",
+    done: false,
+    created_at: "2025-06-13T11:10:00",
+  },
   {
     id: 9,
+    user_id: 101,
     task: "Check blood sugar (mid-afternoon)",
     deadline: "03:00 PM",
     details: "",
     done: false,
+    created_at: "2025-06-13T14:00:00",
   },
   {
     id: 10,
+    user_id: 101,
     task: "Check blood sugar (dinner)",
     deadline: "06:00 PM",
     details: "",
     done: false,
+    created_at: "2025-06-13T17:00:00",
   },
   {
     id: 11,
+    user_id: 101,
     task: "Take rapid-acting insulin (dinner)",
     deadline: "06:05 PM",
     details: "Inject before dinner",
     done: false,
+    created_at: "2025-06-13T17:05:00",
   },
   {
     id: 12,
+    user_id: 101,
     task: "Eat dinner",
     deadline: "06:10 PM",
     details: "",
     done: false,
+    created_at: "2025-06-13T17:10:00",
   },
   {
     id: 13,
+    user_id: 101,
     task: "Check blood sugar (night)",
     deadline: "09:00 PM",
     details: "",
     done: false,
+    created_at: "2025-06-13T20:00:00",
   },
   {
     id: 14,
+    user_id: 101,
     task: "Check final blood sugar (bedtime)",
     deadline: "10:00 PM",
     details: "",
     done: false,
+    created_at: "2025-06-13T21:00:00",
   },
 ];
 
@@ -141,7 +177,6 @@ export default function DailyToDoListPage() {
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
-        {/* Header Section */}
         <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-black flex items-center gap-2">
@@ -167,12 +202,14 @@ export default function DailyToDoListPage() {
               </Button>
             </div>
           </div>
-          <Button className="w-full md:w-auto bg-[#4741A6] text-white font-bold text-md h-12 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:bg-[#3b368a] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all">
-            <Plus className="mr-2 h-5 w-5" /> Add New Quest
-          </Button>
+          <Link
+            href="/dashboard/daily-task/add"
+            className="w-full flex p-3 md:w-auto bg-[#4741A6] text-white font-bold text-md h-12 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:bg-[#3b368a] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
+          >
+            <Plus className="mr-2 h-5 w-5" /> Add New Task
+          </Link>
         </header>
 
-        {/* Main Content Card */}
         <Card className="bg-white rounded-2xl border-2 border-black shadow-[8px_8px_0px_#000]">
           <CardHeader className="border-b-2 border-black pb-4">
             <CardTitle className="flex justify-between items-center">
@@ -209,13 +246,13 @@ export default function DailyToDoListPage() {
   );
 }
 
-interface Task {
-  id: number;
-  task: string;
-  done: boolean;
-  deadline: string;
-  details?: string;
-}
+// interface Task {
+//   id: number;
+//   task: string;
+//   done: boolean;
+//   deadline: string;
+//   details?: string;
+// }
 
 interface TaskItemProps {
   task: Task;
