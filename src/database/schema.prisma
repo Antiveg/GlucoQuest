@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "./prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          Int        @id @default(autoincrement())
+  email       String     @unique
+  password    String
+  ic_ratio    Float?
+  createdAt   DateTime   @default(now())
+  
+  glucoseReadings GlucoseReading[]
+  meals          Meal[]
+  tasks          Task[]
+  cgmDevices     CgmDevice[]
+  notifications  Notification[]
+}
+
+model GlucoseReading {
+  id          Int       @id @default(autoincrement()) 
+  userId      Int       
+  time        DateTime  @default(now())               
+  glucose     Int       
+  tag         String?   
+  createdAt   DateTime  @default(now())               
+
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model Meal {
+  id          Int       @id @default(autoincrement()) 
+  userId      Int       
+  name        String    
+  time        DateTime  
+  photoUrl    String?   
+  totalCarbs  Int       
+  insulinDose Float     
+  notes       String?   
+  createdAt   DateTime  @default(now()) 
+
+  user        User      @relation(fields: [userId], references: [id])
+  foods       Food[]
+}
+
+model Food {
+  id          Int       @id @default(autoincrement()) 
+  mealId      Int       
+  name        String    
+  grams       Int       
+  carbs       Int       
+  createdAt   DateTime  @default(now()) 
+
+  meal        Meal      @relation(fields: [mealId], references: [id])
+}
+
+model Task {
+  id          Int       @id @default(autoincrement()) 
+  userId      Int       
+  task        String    
+  deadline    DateTime? 
+  details     String?   
+  done        Boolean   @default(false) 
+  createdAt   DateTime  @default(now()) 
+
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model CgmDevice {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  deviceId    String    @unique
+  deviceName  String?
+  connectedAt DateTime  @default(now())               
+  lastSyncAt  DateTime?
+
+  user        User      @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  title       String
+  description String?
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id])
+}
