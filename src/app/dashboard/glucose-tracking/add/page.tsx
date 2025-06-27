@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
+import { GlucoseReading } from "@/types";
 
 // --- MOCK DATA & CONFIG ---
 const READING_TAGS = [
@@ -33,19 +34,38 @@ const READING_TAGS = [
   "Exercise",
 ];
 
-interface AddGlucoseReadingFormProps {
-  onClose: () => void;
-}
-
-export default function AddGlucoseReadingForm({
-  onClose,
-}: AddGlucoseReadingFormProps) {
+export default function AddGlucoseReadingForm() {
   const [selectedTag, setSelectedTag] = useState("After Meal");
 
   // Pre-fill date and time with current values
   const now = new Date();
   const [date, setDate] = useState(format(now, "yyyy-MM-dd"));
   const [time, setTime] = useState(format(now, "HH:mm"));
+  const [glucose, setGlucose] = useState("");
+  const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const userId = 1; // Replace with actual logged-in user ID
+
+  async function handleSubmit() {
+    if (!glucose || Number(glucose) <= 0) {
+      alert("Please enter a valid glucose value.");
+      return;
+    }
+
+    // Combine date + time into ISO string
+    const timeISO = new Date(`${date}T${time}:00`).toISOString();
+
+    const reading: GlucoseReading = {
+      user_id: userId,
+      time: timeISO,
+      glucose: Number(glucose),
+      tag: selectedTag,
+      notes: notes || "",
+    };
+
+    //call api here
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
@@ -117,6 +137,8 @@ export default function AddGlucoseReadingForm({
                   type="number"
                   placeholder="e.g., 120"
                   className="border-black h-16 text-2xl font-bold pl-12"
+                  value={glucose}
+                  onChange={(e) => setGlucose(e.target.value)}
                 />
                 <Droplet className="absolute left-4 top-1/2 -translate-y-1/2 h-6 w-6 text-gray-400" />
               </div>
@@ -155,19 +177,18 @@ export default function AddGlucoseReadingForm({
                 id="notes"
                 placeholder="e.g., Felt tired, ate an apple..."
                 className="border-black min-h-[100px]"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col sm:flex-row justify-end gap-3 p-6 border-t-2 border-black">
             <Button
-              onClick={onClose}
-              variant="outline"
-              className="w-full sm:w-auto h-12 text-lg rounded-lg border-2 border-black font-bold shadow-[4px_4px_0px_#000] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
+              onClick={handleSubmit}
+              disabled={loading}
+              className="cursor-pointer w-full sm:w-auto bg-[#4741A6] text-white font-bold text-lg h-12 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:bg-[#3b368a] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
             >
-              Cancel
-            </Button>
-            <Button className="w-full sm:w-auto bg-[#4741A6] text-white font-bold text-lg h-12 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:bg-[#3b368a] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all">
-              Save Reading
+              {loading ? "Saving..." : "Save Reading"}
             </Button>
           </CardFooter>
         </Card>
