@@ -1,4 +1,4 @@
-import { Prisma, User } from '@/database/prisma-client';
+import { Prisma } from '@/database/prisma-client';
 import prisma from '@/lib/config/prisma'
 
 export const queryUsers = async () => {

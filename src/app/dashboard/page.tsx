@@ -16,8 +16,14 @@ import {
   Syringe,
   ArrowUp,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import Loading from "@/components/loading";
 
 export default function DashboardPage() {
+
+  const { data: session, status } = useSession()
+  if(status === "loading") return <Loading message="Loading User Information ..."/>
+
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">

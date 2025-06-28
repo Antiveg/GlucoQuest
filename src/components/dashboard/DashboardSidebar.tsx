@@ -14,7 +14,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+import Image from "next/image";
 
 interface SidebarProps {
   isSidebarOpen: boolean;
@@ -74,6 +75,7 @@ export default function DashboardSidebar({
   ];
 
   const userName = "Alex the Adventurer";
+  const { data: session } = useSession()
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -117,10 +119,18 @@ export default function DashboardSidebar({
 
         <div className="p-4 border-t-2 border-black space-y-2">
           <div className="flex items-center gap-3">
+            {session?.user?.image ?
+            <Image
+              src={session.user.image}
+              alt={session.user.name ?? "User"}
+              width={48}
+              height={48}
+              className="rounded-full object-cover"
+            /> :
             <div className="h-12 w-12 rounded-full bg-[#9BBBFC] flex items-center justify-center border-2 border-black">
-              <span className="text-2xl font-bold">{userName.charAt(0)}</span>
-            </div>
-            <span className="font-bold text-lg truncate">{userName}</span>
+              <span className="text-2xl font-bold">{session?.user?.name?.charAt(0).toUpperCase()}</span>
+            </div>}
+            <span className="font-bold text-lg truncate">{session?.user?.name ?? "#N/A"}</span>
           </div>
           <Link
             href="/"

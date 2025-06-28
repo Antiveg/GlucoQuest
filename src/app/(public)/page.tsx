@@ -1,3 +1,4 @@
+"use client"
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -9,8 +10,11 @@ import {
   Heart,
   Sparkles,
 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 export default function LandingPage() {
+  const { data: session } = useSession()
   return (
     <div>
       <main>
@@ -26,14 +30,15 @@ export default function LandingPage() {
                 a game. Level up your health!
               </p>
               <div className="mt-8 flex justify-center md:justify-start gap-4">
-                <a href="/signup">
+                <Link href={session ? "/dashboard" : "/auth/signin"}>
                   <Button
                     size="lg"
+                    aria-label="start your quest"
                     className="h-14 px-8 bg-[#4741A6] text-white font-bold text-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:bg-[#3b368a] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
                   >
                     Start Your Quest
                   </Button>
-                </a>
+                </Link>
               </div>
             </div>
             <HeroIllustration />
@@ -130,14 +135,14 @@ export default function LandingPage() {
                 get started.
               </p>
               <div className="mt-8">
-                <a href="/signup">
+                <Link href="/auth/signup">
                   <Button
                     size="lg"
                     className="h-14 px-8 bg-[#F9CE69] text-black font-bold text-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:bg-yellow-400 active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
                   >
                     Claim Your Free Account
                   </Button>
-                </a>
+                </Link>
               </div>
             </div>
           </div>

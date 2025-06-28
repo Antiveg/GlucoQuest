@@ -1,5 +1,6 @@
 import { Prisma } from "@/database/prisma-client";
 import { protectApiRoute } from "@/lib/auth/protect-api";
+import { queryGlucoseReadingsByUserId } from "@/lib/data-layers/glucose-readings";
 import { queryCreateUser, queryUsers } from "@/lib/data-layers/users";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
@@ -11,16 +12,12 @@ export async function getUsersService() {
 
     try {
         const users = await queryUsers();
-        return {
-            message: "Users fetched successfully",
-            data: users,
-        };
+        return users
     } catch (error) {
         console.error("getUsersService error:", error);
         throw new Error(error instanceof Error ? error.message : "Internal Server Error");
     }
 }
-
 
 export async function createUserService(user : Prisma.UserCreateInput) {
     if (!user.name) throw new Error("User Candidate lack name attribute...");
@@ -38,7 +35,6 @@ export async function createUserService(user : Prisma.UserCreateInput) {
         if (!createdUser) throw new Error("Failed to create user due to unknown error.");
 
         return {
-            message: "User created successfully.",
             user: {
                 id: createdUser.id,
                 email: createdUser.email,
@@ -47,6 +43,31 @@ export async function createUserService(user : Prisma.UserCreateInput) {
                 createdAt: createdUser.createdAt,
             },
         };
+    } catch (error: unknown) {
+        if(error instanceof Error){
+            console.error(error);
+            throw new Error(error.message);
+        }
+        console.error(error);
+        throw new Error("Internal Server Error");
+    }
+}
+
+export async function getGlucoseReadingsByUserIdService(uid : string){
+
+    const userId = Number(uid)
+    if (typeof userId !== 'number' || isNaN(userId)) throw new Error("Invalid user id queried.");
+
+    try {
+        const glucoseReadings = await queryGlucoseReadingsByUserId(userId);
+        if (!glucoseReadings) throw new Error("Failed to query user's glucose reading to database ...");
+        const formattedReadings = glucoseReadings.map((reading) => ({
+            ...reading,
+            time: reading.time.toISOString(),
+            createdAt: reading.createdAt.toISOString()
+        }))
+        // console.log(formattedReadings)
+        return formattedReadings;
     } catch (error: unknown) {
         if(error instanceof Error){
             console.error(error);

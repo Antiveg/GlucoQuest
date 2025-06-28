@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,82 +37,116 @@ import {
 import { format, addDays, subDays } from "date-fns";
 import Link from "next/link";
 import { GlucoseReading } from "@/types";
+import Loading from "@/components/loading";
+import { useGlucoseReadingsByUserId } from "@/lib/client-queries/users";
+import ErrorBox from "@/components/error-box";
 
-const mockGlucoseData: GlucoseReading[] = [
-  {
-    id: 1,
-    user_id: 101,
-    time: "2025-06-13T07:00:00",
-    glucose: 95,
-    tag: "Fasting",
-    notes: "Woke up feeling good",
-    created_at: "2025-06-13T07:05:00",
-  },
-  {
-    id: 2,
-    user_id: 101,
-    time: "2025-06-13T09:30:00",
-    glucose: 165,
-    tag: "After Breakfast",
-    notes: "Oatmeal & berries",
-    created_at: "2025-06-13T09:35:00",
-  },
-  {
-    id: 3,
-    user_id: 101,
-    time: "2025-06-13T12:45:00",
-    glucose: 110,
-    tag: "Before Lunch",
-    notes: "",
-    created_at: "2025-06-13T12:50:00",
-  },
-  {
-    id: 4,
-    user_id: 101,
-    time: "2025-06-13T14:30:00",
-    glucose: 185,
-    tag: "After Lunch",
-    notes: "Sandwich and chips",
-    created_at: "2025-06-13T14:35:00",
-  },
-  {
-    id: 5,
-    user_id: 101,
-    time: "2025-06-13T18:00:00",
-    glucose: 75,
-    tag: "Before Dinner",
-    notes: "Felt a little shaky",
-    created_at: "2025-06-13T18:05:00",
-  },
-  {
-    id: 6,
-    user_id: 101,
-    time: "2025-06-13T20:00:00",
-    glucose: 140,
-    tag: "After Dinner",
-    notes: "Chicken and rice",
-    created_at: "2025-06-13T20:05:00",
-  },
-  {
-    id: 7,
-    user_id: 101,
-    time: "2025-06-13T22:30:00",
-    glucose: 120,
-    tag: "Bedtime",
-    notes: "",
-    created_at: "2025-06-13T22:35:00",
-  },
-];
+// const UserGlucoseReadings: GlucoseReading[] = [
+//   {
+//     id: 1,
+//     user_id: 101,
+//     time: "2025-06-13T07:00:00",
+//     glucose: 95,
+//     tag: "Fasting",
+//     notes: "Woke up feeling good",
+//     created_at: "2025-06-13T07:05:00",
+//   },
+//   {
+//     id: 2,
+//     user_id: 101,
+//     time: "2025-06-13T09:30:00",
+//     glucose: 165,
+//     tag: "After Breakfast",
+//     notes: "Oatmeal & berries",
+//     created_at: "2025-06-13T09:35:00",
+//   },
+//   {
+//     id: 3,
+//     user_id: 101,
+//     time: "2025-06-13T12:45:00",
+//     glucose: 110,
+//     tag: "Before Lunch",
+//     notes: "",
+//     created_at: "2025-06-13T12:50:00",
+//   },
+//   {
+//     id: 4,
+//     user_id: 101,
+//     time: "2025-06-13T14:30:00",
+//     glucose: 185,
+//     tag: "After Lunch",
+//     notes: "Sandwich and chips",
+//     created_at: "2025-06-13T14:35:00",
+//   },
+//   {
+//     id: 5,
+//     user_id: 101,
+//     time: "2025-06-13T18:00:00",
+//     glucose: 75,
+//     tag: "Before Dinner",
+//     notes: "Felt a little shaky",
+//     created_at: "2025-06-13T18:05:00",
+//   },
+//   {
+//     id: 6,
+//     user_id: 101,
+//     time: "2025-06-13T20:00:00",
+//     glucose: 140,
+//     tag: "After Dinner",
+//     notes: "Chicken and rice",
+//     created_at: "2025-06-13T20:05:00",
+//   },
+//   {
+//     id: 7,
+//     user_id: 101,
+//     time: "2025-06-13T22:30:00",
+//     glucose: 120,
+//     tag: "Bedtime",
+//     notes: "",
+//     created_at: "2025-06-13T22:35:00",
+//   },
+// ];
 
 export default function DailyGlucosePage() {
-  const [currentDate, setCurrentDate] = useState(
-    new Date("2025-06-13T12:00:00Z")
-  );
+
+  const { data: UserGlucoseReadings, isLoading: UserGlucoseReadingsLoading, isError, error } = useGlucoseReadingsByUserId()
+
+  const [currentDate, setCurrentDate] = useState(new Date("2025-06-13T12:00:00Z"));
   const [unit, setUnit] = useState<"mg/dL" | "mmol/L">("mg/dL");
+  const [filteredUserGlucoseReadings, setFilteredUserGlucoseReadings] = useState<GlucoseReading[]>([])
+
+  useEffect(() => {
+    if (UserGlucoseReadings) {
+      setFilteredUserGlucoseReadings(
+        UserGlucoseReadings.filter((reading) => {
+          const readingDate = new Date(reading.time);
+          const currentDateUTC = new Date(currentDate.toISOString());
+          return (
+            readingDate.getUTCFullYear() === currentDateUTC.getUTCFullYear() &&
+            readingDate.getUTCMonth() === currentDateUTC.getUTCMonth() &&
+            readingDate.getUTCDate() === currentDateUTC.getUTCDate()
+          );
+        })
+      );
+    }
+  }, [UserGlucoseReadings, currentDate]);
+
+  const handleDateChange = (date : Date) => {
+    setCurrentDate(date)
+    const filteredReadings = UserGlucoseReadings?.filter((gr) => {
+      const readingDate = new Date(gr.time);
+      return (
+        readingDate.getFullYear() === date.getFullYear() &&
+        readingDate.getMonth() === date.getMonth() &&
+        readingDate.getDate() === date.getDate()
+      );
+    })
+    setFilteredUserGlucoseReadings(filteredReadings ?? []);
+  }
 
   // --- CALCULATIONS ---
   const dailyStats = useMemo(() => {
-    if (mockGlucoseData.length === 0) {
+    if (UserGlucoseReadings?.length === 0) {
       return {
         avg: 0,
         high: { glucose: 0 },
@@ -120,30 +154,34 @@ export default function DailyGlucosePage() {
         timeInRange: 0,
       };
     }
-    const values = mockGlucoseData.map((d) => d.glucose);
-    const avg = Math.round(values.reduce((a, b) => a + b, 0) / values.length);
-    const high = mockGlucoseData.reduce((p, c) =>
+    const values = UserGlucoseReadings?.map((d) => d.glucose);
+    const avg = values?.length ? Math.round(values?.reduce((a, b) => a + b, 0) / values.length) : 0;
+    const high = UserGlucoseReadings?.reduce((p, c) =>
       p.glucose > c.glucose ? p : c
     );
-    const low = mockGlucoseData.reduce((p, c) =>
+    const low = UserGlucoseReadings?.reduce((p, c) =>
       p.glucose < c.glucose ? p : c
     );
-    const inRangeCount = values.filter((v) => v >= 70 && v <= 180).length;
-    const timeInRange = Math.round((inRangeCount / values.length) * 100);
+    const inRangeCount = values?.filter((v) => v >= 70 && v <= 180).length ?? 0;
+    const timeInRange = values?.length ? Math.round((inRangeCount / values.length) * 100) : 0;
     return { avg, high, low, timeInRange };
-  }, []);
+  }, [UserGlucoseReadings]);
 
   const chartData = useMemo(() => {
-    return mockGlucoseData.map((d) => ({
+    if (!filteredUserGlucoseReadings || filteredUserGlucoseReadings.length === 0) return []
+    return filteredUserGlucoseReadings.map((d) => ({
       ...d,
       name: format(new Date(d.time), "HH:mm"),
       glucose: unit === "mmol/L" ? (d.glucose / 18).toFixed(1) : d.glucose,
     }));
-  }, [unit]);
-
-  const outOfRangeAlerts = mockGlucoseData.filter(
+  }, [unit, filteredUserGlucoseReadings, currentDate]);
+  
+  const outOfRangeAlerts: GlucoseReading[] = UserGlucoseReadings ? UserGlucoseReadings.filter(
     (d) => d.glucose < 70 || d.glucose > 180
-  );
+  ) : [];
+
+  if(UserGlucoseReadingsLoading) return <Loading message="Loading User Glucose Loading"/>
+  if(isError) return <ErrorBox error={error}/>
 
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
@@ -155,7 +193,7 @@ export default function DailyGlucosePage() {
             </h1>
             <div className="flex items-center gap-2 mt-2">
               <Button
-                onClick={() => setCurrentDate(subDays(currentDate, 1))}
+                onClick={() => handleDateChange(subDays(currentDate, 1))}
                 variant="outline"
                 className="h-10 w-10 p-0 rounded-lg border-2 border-black bg-white"
               >
@@ -165,7 +203,7 @@ export default function DailyGlucosePage() {
                 {format(currentDate, "MMMM d, yyyy")}
               </span>
               <Button
-                onClick={() => setCurrentDate(addDays(currentDate, 1))}
+                onClick={() => handleDateChange(addDays(currentDate, 1))}
                 variant="outline"
                 className="h-10 w-10 p-0 rounded-lg border-2 border-black bg-white"
               >
@@ -278,7 +316,7 @@ export default function DailyGlucosePage() {
                   />
                   <SummaryStatCard
                     title="Highest"
-                    value={dailyStats.high.glucose}
+                    value={dailyStats?.high?.glucose ?? 0}
                     unit={unit}
                     subtext={`at ${format(Date.now(), "HH:mm")}`}
                     icon={ArrowUp}
@@ -286,7 +324,7 @@ export default function DailyGlucosePage() {
                   />
                   <SummaryStatCard
                     title="Lowest"
-                    value={dailyStats.low.glucose}
+                    value={dailyStats?.low?.glucose ?? 0}
                     unit={unit}
                     subtext={`at ${format(Date.now(), "HH:mm")}`}
                     icon={ArrowDown}
@@ -297,9 +335,9 @@ export default function DailyGlucosePage() {
               <div>
                 <h2 className="text-xl font-bold mb-3">Out-of-Range Alerts</h2>
                 <div className="space-y-3">
-                  {outOfRangeAlerts.length > 0 ? (
-                    outOfRangeAlerts.map((alert) => (
-                      <AlertCard key={alert.time} alert={alert} unit={unit} />
+                  {outOfRangeAlerts && outOfRangeAlerts.length > 0 ? (
+                    outOfRangeAlerts.map((alert, index) => (
+                      <AlertCard key={index} alert={alert} unit={unit} />
                     ))
                   ) : (
                     <Card className="p-4 border-2 border-black rounded-xl bg-green-50">
@@ -334,7 +372,7 @@ export default function DailyGlucosePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {mockGlucoseData.map((reading) => (
+                    {UserGlucoseReadings?.map((reading : GlucoseReading) => (
                       <TableRow key={reading.time}>
                         <TableCell className="font-medium">
                           {format(new Date(reading.time), "HH:mm")}
@@ -408,13 +446,8 @@ const SummaryStatCard = ({
   </Card>
 );
 
-interface Alert {
-  glucose: number;
-  time: string;
-}
-
 interface AlertCardProps {
-  alert: Alert;
+  alert: GlucoseReading;
   unit: string;
 }
 

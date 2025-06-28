@@ -8,12 +8,12 @@ export interface User {
 
 export interface GlucoseReading {
   id: number;
-  user_id: number;
+  userId: number;
   time: string; // ISO timestamp string
   glucose: number; // blood glucose level in mg/dL
   tag: string; // optional contextual tag
   notes?: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface Meal {

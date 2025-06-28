@@ -1,4 +1,5 @@
-import { Prisma, User } from "@/database/prisma-client";
+import { Prisma } from "@/database/prisma-client";
+import { GlucoseReading } from "@/types";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 // get all users query
@@ -34,5 +35,19 @@ export function useCreateUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
+  });
+}
+
+// get user glucose readings by userid
+async function fetchGlucoseReadingsByUserId() {
+  const res = await fetch("/api/user/glucose-readings");
+  if (!res.ok) throw new Error("Failed to fetch the intended glucose readings");
+  return res.json();
+}
+
+export function useGlucoseReadingsByUserId() {
+  return useQuery<GlucoseReading[], Error>({
+    queryKey: ["user-glucose-readings"],
+    queryFn: fetchGlucoseReadingsByUserId,
   });
 }

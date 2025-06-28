@@ -3,6 +3,7 @@
 import DashboardSidebar from "@/components/dashboard/DashboardSidebar";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Menu } from "lucide-react";
+import { Session } from "next-auth";
 import { useState } from "react";
 
 export default function DashboardLayout({
