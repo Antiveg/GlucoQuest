@@ -2,15 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { createGlucoseReadingService, deleteGlucoseReadingByIdService, getGlucoseReadingsByUserIdService } from "@/lib/services/glucose-reading/glucose-reading-services";
 import { protectApiRoute } from "@/lib/auth/protect-api";
 
-export async function GET() {
+export async function GET(request : NextRequest) {
 
     const session = await protectApiRoute()
     if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
     try {
-        const response = await getGlucoseReadingsByUserIdService(session.user.id)
-        // console.log(response)
-        return NextResponse.json(response, { status: 201 });
+        const { searchParams } = new URL(request.url);
+        const date = searchParams.get("date");
+        const timezoneOffsetMinutes = searchParams.get("offset")
+
+        if (!date) return NextResponse.json({ message: "Date is required" }, { status: 400 });
+        const response = await getGlucoseReadingsByUserIdService(session.user.id, date, Number(timezoneOffsetMinutes));
+        return NextResponse.json(response, { status: 200 });
     }catch (error: unknown) {
         console.error("GET /api/user/glucose-readings error:", error);
         return NextResponse.json(

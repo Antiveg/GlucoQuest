@@ -24,7 +24,7 @@ export async function PATCH(request: Request, { params }: { params: { taskId: st
     }
 }
 
-export async function DELETE(request: Request, { params }: { params: { taskId: string } }) {
+export async function DELETE({ params }: { params: { taskId: string } }) {
 
     const session = await protectApiRoute();
     if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });

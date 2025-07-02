@@ -1,12 +1,12 @@
-import { GlucoseReading, Prisma } from "@/database/prisma-client";
-import { deleteGlucoseReadingByIdQuery, getGlucoseReadingsByUserIdQuery , getGlucoseReadingByIdQuery, createGlucoseReadingQuery } from "@/lib/data-layers/glucose-readings";
+import { GlucoseReading } from "@/database/prisma-client";
+import { deleteGlucoseReadingByIdQuery, getGlucoseReadingsByUserIdQuery , createGlucoseReadingQuery } from "@/lib/data-layers/glucose-readings";
 
-export async function getGlucoseReadingsByUserIdService(uid : string){
+export async function getGlucoseReadingsByUserIdService(uid : string, date : string, timezoneOffsetMinutes : number){
     try {
         const userId = Number(uid)
         if (isNaN(userId)) throw new Error("Invalid user id queried.");
 
-        const glucoseReadings = await getGlucoseReadingsByUserIdQuery(userId);
+        const glucoseReadings = await getGlucoseReadingsByUserIdQuery(userId, new Date(date), timezoneOffsetMinutes);
         if (!glucoseReadings) throw new Error("Failed to query user's glucose reading to database ...");
         const formattedReadings = glucoseReadings.map((reading) => ({
             ...reading,

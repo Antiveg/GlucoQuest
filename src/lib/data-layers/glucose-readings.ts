@@ -1,9 +1,17 @@
 import { Prisma } from "@/database/prisma-client"
 import prisma from "../config/prisma"
 
-export const getGlucoseReadingsByUserIdQuery = async (userId : number) => {
+export const getGlucoseReadingsByUserIdQuery = async (userId : number, date : Date, timezoneOffsetMinutes : number) => {
+    const startOfDayUTC = new Date(date.getTime() - timezoneOffsetMinutes * 60 * 1000);
+    const endOfDayUTC = new Date(startOfDayUTC.getTime() + 24 * 60 * 60 * 1000);
     const temp = await prisma.glucoseReading.findMany({
-        where: { userId: userId },
+        where: { 
+            userId: userId,
+            time: {
+                gte: startOfDayUTC,
+                lt: endOfDayUTC,
+            }
+        },
         orderBy : { time: 'asc' },
         select: {
             id: true,

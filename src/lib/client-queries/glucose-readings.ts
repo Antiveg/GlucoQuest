@@ -2,16 +2,17 @@ import { GlucoseReadingInput, GlucoseReading } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // get user glucose readings by userid
-async function fetchGlucoseReadingsByUserId() {
-  const res = await fetch("/api/user/glucose-readings");
+async function fetchGlucoseReadingsByUserId(date: string, offset: number) {
+  const res = await fetch(`/api/user/glucose-readings?date=${date}&offset=${offset}`);
   if (!res.ok) throw new Error("Failed to fetch the intended glucose readings");
   return res.json();
 }
 
-export function useGlucoseReadingsByUserId() {
+export function useGlucoseReadingsByUserId(date: string) {
+  const offset = -new Date().getTimezoneOffset();
   return useQuery<GlucoseReading[], Error>({
-    queryKey: ["user-glucose-readings"],
-    queryFn: fetchGlucoseReadingsByUserId,
+    queryKey: ["user-glucose-readings", date],
+    queryFn: () => fetchGlucoseReadingsByUserId(date, offset),
   });
 }
 
@@ -26,13 +27,15 @@ async function deleteUserGlucoseReadingById(id: number) {
   return res.json();
 }
 
-export function useDeleteUserGlucoseReadingById() {
+export function useDeleteUserGlucoseReadingById(date : string) {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: deleteUserGlucoseReadingById,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-glucose-readings"] });
+    onSuccess: (deletedRecord) => {
+      queryClient.setQueryData<GlucoseReading[]>(
+        ["user-glucose-readings", date],
+        (oldData) => oldData ? oldData.filter(r => r.id !== deletedRecord.id) : []
+      );
     },
     onError: (error) => {
       console.error("Error deleting glucose reading:", error);
@@ -52,13 +55,15 @@ async function createGlucoseReading(record: GlucoseReadingInput) {
   return res.json();
 }
 
-export function useCreateGlucoseReading() {
+export function useCreateGlucoseReading(date : string) {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: createGlucoseReading,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-glucose-readings"] });
+    onSuccess: (newRecord) => {
+      queryClient.setQueryData<GlucoseReading[]>(
+        ["user-glucose-readings", date],
+        (oldData) => oldData ? [newRecord, ...oldData] : [newRecord]
+      );
     },
     onError: (error) => {
       console.error("Error creating glucose reading:", error);

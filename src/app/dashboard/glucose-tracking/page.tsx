@@ -108,41 +108,11 @@ import ErrorBox from "@/components/error-box";
 
 export default function DailyGlucosePage() {
 
-  const { data: UserGlucoseReadings, isLoading: UserGlucoseReadingsLoading, isError, error } = useGlucoseReadingsByUserId()
-  const { mutate, isPending } = useDeleteUserGlucoseReadingById()
-
-  const [currentDate, setCurrentDate] = useState(new Date("2025-06-13T12:00:00.000Z"));
+  const [currentDate, setCurrentDate] = useState(new Date(Date.UTC(2025, 5, 13, 0, 0, 0)));
   const [unit, setUnit] = useState<"mg/dL" | "mmol/L">("mg/dL");
-  const [filteredUserGlucoseReadings, setFilteredUserGlucoseReadings] = useState<GlucoseReading[]>([])
 
-  useEffect(() => {
-    if (UserGlucoseReadings) {
-      setFilteredUserGlucoseReadings(
-        UserGlucoseReadings.filter((reading) => {
-          const readingDate = new Date(reading.time);
-          const currentDateUTC = new Date(currentDate.toISOString());
-          return (
-            readingDate.getUTCFullYear() === currentDateUTC.getUTCFullYear() &&
-            readingDate.getUTCMonth() === currentDateUTC.getUTCMonth() &&
-            readingDate.getUTCDate() === currentDateUTC.getUTCDate()
-          );
-        })
-      );
-    }
-  }, [UserGlucoseReadings, currentDate]);
-
-  const handleDateChange = (date : Date) => {
-    setCurrentDate(date)
-    const filteredReadings = UserGlucoseReadings?.filter((gr) => {
-      const readingDate = new Date(gr.time);
-      return (
-        readingDate.getFullYear() === date.getFullYear() &&
-        readingDate.getMonth() === date.getMonth() &&
-        readingDate.getDate() === date.getDate()
-      );
-    })
-    setFilteredUserGlucoseReadings(filteredReadings ?? []);
-  }
+  const { data: UserGlucoseReadings, isLoading: UserGlucoseReadingsLoading, isError, error } = useGlucoseReadingsByUserId(currentDate.toISOString())
+  const { mutate, isPending } = useDeleteUserGlucoseReadingById(currentDate.toISOString())
 
   // --- CALCULATIONS ---
   const dailyStats = useMemo(() => {
@@ -168,13 +138,13 @@ export default function DailyGlucosePage() {
   }, [UserGlucoseReadings]);
 
   const chartData = useMemo(() => {
-    if (!filteredUserGlucoseReadings || filteredUserGlucoseReadings.length === 0) return []
-    return filteredUserGlucoseReadings.map((d) => ({
+    if (!UserGlucoseReadings || UserGlucoseReadings.length === 0) return []
+    return UserGlucoseReadings.map((d) => ({
       ...d,
       name: format(new Date(d.time), "HH:mm"),
       glucose: unit === "mmol/L" ? (d.glucose / 18).toFixed(1) : d.glucose,
     }));
-  }, [unit, filteredUserGlucoseReadings, currentDate]);
+  }, [unit, UserGlucoseReadings, currentDate]);
   
   const outOfRangeAlerts: GlucoseReading[] = UserGlucoseReadings ? UserGlucoseReadings.filter(
     (d) => d.glucose < 70 || d.glucose > 180
@@ -193,7 +163,7 @@ export default function DailyGlucosePage() {
             </h1>
             <div className="flex items-center gap-2 mt-2">
               <Button
-                onClick={() => handleDateChange(subDays(currentDate, 1))}
+                onClick={() => setCurrentDate(subDays(currentDate, 1))}
                 variant="outline"
                 className="h-10 w-10 p-0 rounded-lg border-2 border-black bg-white"
               >
@@ -203,7 +173,7 @@ export default function DailyGlucosePage() {
                 {format(currentDate, "MMMM d, yyyy")}
               </span>
               <Button
-                onClick={() => handleDateChange(addDays(currentDate, 1))}
+                onClick={() => setCurrentDate(addDays(currentDate, 1))}
                 variant="outline"
                 className="h-10 w-10 p-0 rounded-lg border-2 border-black bg-white"
               >
@@ -372,8 +342,7 @@ export default function DailyGlucosePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredUserGlucoseReadings
-                    .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+                    {UserGlucoseReadings && UserGlucoseReadings
                     .map((reading : GlucoseReading) => (
                       <TableRow key={reading.id}>
                         <TableCell className="font-medium">

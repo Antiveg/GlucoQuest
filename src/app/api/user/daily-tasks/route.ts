@@ -13,7 +13,6 @@ export async function GET(request: Request) {
         const timezoneOffsetMinutes = searchParams.get("offset")
 
         if (!date) return NextResponse.json({ message: "Date is required" }, { status: 400 });
-        
         const response = await getDailyTasksByUserIdService(session.user.id, date, Number(timezoneOffsetMinutes));
 
         return NextResponse.json(response, { status: 200 });

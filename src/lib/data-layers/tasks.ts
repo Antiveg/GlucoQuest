@@ -2,11 +2,8 @@ import { Prisma } from "@/database/prisma-client";
 import prisma from "../config/prisma"
 
 export const getDailyTasksByUserIdQuery = async (userId : number, date : Date, timezoneOffsetMinutes: number) => {
-    console.log(date)
     const startOfDayUTC = new Date(date.getTime() - timezoneOffsetMinutes * 60 * 1000);
-    console.log(startOfDayUTC)
     const endOfDayUTC = new Date(startOfDayUTC.getTime() + 24 * 60 * 60 * 1000);
-    console.log(endOfDayUTC)
     const temp = await prisma.task.findMany({
         where: { 
             userId: userId,
