@@ -17,6 +17,7 @@ import {
 import { format, addDays, subDays } from "date-fns";
 import { Task } from "@/types";
 import Link from "next/link";
+import { useDailyTasksByUserId } from "@/lib/client-queries/tasks";
 
 const initialTasks: Task[] = [
   {
@@ -148,31 +149,29 @@ const initialTasks: Task[] = [
 ];
 
 export default function DailyToDoListPage() {
-  const [tasks, setTasks] = useState(initialTasks);
-  const [currentDate, setCurrentDate] = useState(
-    new Date("2025-06-13T12:00:00Z")
-  );
+  // const [tasks, setTasks] = useState(initialTasks);
+  const [currentDate, setCurrentDate] = useState(new Date("2025-06-13T12:00:00Z"));
+  const { data: tasks, isLoading, isError, error } = useDailyTasksByUserId(currentDate.toISOString())
 
-  const toggleTask = (taskId: number) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId ? { ...task, done: !task.done } : task
-      )
-    );
-  };
+  // const toggleTask = (taskId: number) => {
+  //   setTasks((prevTasks) =>
+  //     prevTasks.map((task) =>
+  //       task.id === taskId ? { ...task, done: !task.done } : task
+  //     )
+  //   );
+  // };
 
-  const deleteTask = (taskId: number) => {
-    setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
-  };
+  // const deleteTask = (taskId: number) => {
+  //   setTasks((prevTasks) => prevTasks.filter((task) => task.id !== taskId));
+  // };
 
   const completedTasksCount = useMemo(
-    () => tasks.filter((t) => t.done).length,
-    [tasks]
-  );
+    () => tasks?.filter((t) => t.done).length ?? 0
+  , [tasks]);
+
   const progressPercentage = useMemo(
-    () => (tasks.length > 0 ? (completedTasksCount / tasks.length) * 100 : 0),
-    [completedTasksCount, tasks.length]
-  );
+    () => ((tasks ?? []).length > 0 ? (completedTasksCount / (tasks?.length ?? 0)) * 100 : 0)
+  , [completedTasksCount, tasks]);
 
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
@@ -215,19 +214,19 @@ export default function DailyToDoListPage() {
             <CardTitle className="flex justify-between items-center">
               <span>Daily Progress</span>
               <span className="font-bold text-lg">
-                {completedTasksCount} / {tasks.length} Quests
+                {completedTasksCount} / {tasks?.length} Quests
               </span>
             </CardTitle>
             <Progress value={progressPercentage} className="w-full mt-2" />
           </CardHeader>
           <CardContent className="p-4 space-y-3">
-            {tasks.length > 0 ? (
-              tasks.map((task) => (
+            {(tasks ?? []).length > 0 ? (
+              tasks?.map((task) => (
                 <TaskItem
                   key={task.id}
                   task={task}
-                  onToggle={toggleTask}
-                  onDelete={deleteTask}
+                  onToggle={() => console.log("toggle")}
+                  onDelete={() => console.log("delete")}
                 />
               ))
             ) : (
@@ -284,7 +283,7 @@ const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
         </label>
         <div className="flex items-center gap-2 text-sm text-gray-500">
           <Clock size={14} />
-          <span>{task.deadline}</span>
+          <span>{format(new Date(task.deadline), "dd/MM/yyyy HH:mm")}</span>
         </div>
         {task.details && (
           <p className="text-gray-600 mt-1 text-sm">{task.details}</p>

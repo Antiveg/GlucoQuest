@@ -50,7 +50,6 @@ export default function AddGlucoseReadingForm() {
     }
 
     const localDate = new Date(`${date}T${time}:00`);
-
     const reading: GlucoseReadingInput = {
       time: localDate.toISOString(),
       glucose: Number(glucose),
