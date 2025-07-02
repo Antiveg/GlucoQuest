@@ -18,7 +18,6 @@ import {
   TrendingUp,
   ArrowUp,
   ArrowDown,
-  Pencil,
   Trash2,
   AlertTriangle,
   History,
@@ -38,7 +37,7 @@ import { format, addDays, subDays } from "date-fns";
 import Link from "next/link";
 import { GlucoseReading } from "@/types";
 import Loading from "@/components/loading";
-import { useDeleteUserGlucoseReadingById, useGlucoseReadingsByUserId } from "@/lib/client-queries/users";
+import { useDeleteUserGlucoseReadingById, useGlucoseReadingsByUserId } from "@/lib/client-queries/glucose-readings";
 import ErrorBox from "@/components/error-box";
 
 // const UserGlucoseReadings: GlucoseReading[] = [
@@ -112,7 +111,7 @@ export default function DailyGlucosePage() {
   const { data: UserGlucoseReadings, isLoading: UserGlucoseReadingsLoading, isError, error } = useGlucoseReadingsByUserId()
   const { mutate, isPending } = useDeleteUserGlucoseReadingById()
 
-  const [currentDate, setCurrentDate] = useState(new Date("2025-06-13T12:00:00Z"));
+  const [currentDate, setCurrentDate] = useState(new Date("2025-06-13T12:00:00.000Z"));
   const [unit, setUnit] = useState<"mg/dL" | "mmol/L">("mg/dL");
   const [filteredUserGlucoseReadings, setFilteredUserGlucoseReadings] = useState<GlucoseReading[]>([])
 
@@ -373,8 +372,10 @@ export default function DailyGlucosePage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {UserGlucoseReadings?.map((reading : GlucoseReading) => (
-                      <TableRow key={reading.time}>
+                    {filteredUserGlucoseReadings
+                    .sort((a, b) => new Date(a.time).getTime() - new Date(b.time).getTime())
+                    .map((reading : GlucoseReading) => (
+                      <TableRow key={reading.id}>
                         <TableCell className="font-medium">
                           {format(new Date(reading.time), "HH:mm")}
                         </TableCell>

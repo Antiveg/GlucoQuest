@@ -22,7 +22,8 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
-import { GlucoseReading } from "@/types";
+import { GlucoseReadingInput } from "@/types";
+import { useCreateGlucoseReading } from "@/lib/client-queries/glucose-readings";
 
 // --- MOCK DATA & CONFIG ---
 const READING_TAGS = [
@@ -36,16 +37,11 @@ const READING_TAGS = [
 
 export default function AddGlucoseReadingForm() {
   const [selectedTag, setSelectedTag] = useState("After Meal");
-
-  // Pre-fill date and time with current values
-  const now = new Date();
-  const [date, setDate] = useState(format(now, "yyyy-MM-dd"));
-  const [time, setTime] = useState(format(now, "HH:mm"));
+  const [date, setDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [time, setTime] = useState(format(new Date(), "HH:mm"));
   const [glucose, setGlucose] = useState("");
   const [notes, setNotes] = useState("");
-  const [loading, setLoading] = useState(false);
-
-  const userId = 1; // Replace with actual logged-in user ID
+  const { mutate, isPending } = useCreateGlucoseReading()
 
   async function handleSubmit() {
     if (!glucose || Number(glucose) <= 0) {
@@ -53,18 +49,16 @@ export default function AddGlucoseReadingForm() {
       return;
     }
 
-    // Combine date + time into ISO string
-    const timeISO = new Date(`${date}T${time}:00`).toISOString();
+    const localDate = new Date(`${date}T${time}:00`);
 
-    const reading: GlucoseReading = {
-      user_id: userId,
-      time: timeISO,
+    const reading: GlucoseReadingInput = {
+      time: localDate.toISOString(),
       glucose: Number(glucose),
       tag: selectedTag,
       notes: notes || "",
     };
 
-    //call api here
+    mutate(reading)
   }
 
   return (
@@ -103,7 +97,9 @@ export default function AddGlucoseReadingForm() {
                   id="date"
                   type="date"
                   value={date}
-                  onChange={(e) => setDate(e.target.value)}
+                  onChange={(e) => {
+                    setDate(e.target.value)
+                  }}
                   className="border-black h-12"
                 />
               </div>
@@ -185,10 +181,10 @@ export default function AddGlucoseReadingForm() {
           <CardFooter className="flex flex-col sm:flex-row justify-end gap-3 p-6 border-t-2 border-black">
             <Button
               onClick={handleSubmit}
-              disabled={loading}
+              disabled={isPending}
               className="cursor-pointer w-full sm:w-auto bg-[#4741A6] text-white font-bold text-lg h-12 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:bg-[#3b368a] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
             >
-              {loading ? "Saving..." : "Save Reading"}
+              {isPending ? "Saving..." : "Save Reading"}
             </Button>
           </CardFooter>
         </Card>

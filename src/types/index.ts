@@ -6,13 +6,16 @@ export interface User {
   created_at: string; // ISO timestamp string
 }
 
-export interface GlucoseReading {
-  id: number;
-  userId: number;
+export interface GlucoseReadingInput {
   time: string; // ISO timestamp string
   glucose: number; // blood glucose level in mg/dL
   tag: string; // optional contextual tag
   notes?: string;
+}
+
+export interface GlucoseReading extends GlucoseReadingInput {
+  id: number;
+  userId: number;
   createdAt: string;
 }
 
