@@ -1,9 +1,11 @@
 import { Task } from "@/types";
+import { CreateTask } from "@/types/task";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // get user daily tasks by userId
 async function fetchDailyTasksByUserId(date: string) {
-  const res = await fetch(`/api/user/daily-tasks?date=${date}`, {
+  const offset = -new Date().getTimezoneOffset();
+  const res = await fetch(`/api/user/daily-tasks?date=${date}&offset=${offset}`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
   });
@@ -79,6 +81,31 @@ export function useDeleteTaskById(date: string) {
     },
     onError: (error) => {
       console.error("Error deleting task:", error);
+    },
+  });
+}
+
+// Create new user task
+async function createUserTask(task: CreateTask) {
+  const res = await fetch(`/api/user/daily-tasks`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(task),
+  });
+
+  if (!res.ok) throw new Error("Failed to create new user task");
+  return res.json();
+}
+
+export function useCreateUserTask(date : string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: createUserTask,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-daily-tasks", date] });
+    },
+    onError: (error) => {
+      console.error("Error creating new user task:", error);
     },
   });
 }

@@ -8,19 +8,19 @@ VALUES
 (1, '2025-06-13T13:00:00Z', 140, 'After Dinner', 'Chicken and rice', '2025-06-13T13:05:00Z'),
 (1, '2025-06-13T15:30:00Z', 120, 'Bedtime', '...', '2025-06-13T15:35:00Z');
 
-INSERT INTO "Task" ("id", "userId", "task", "deadline", "details", "done", "createdAt") 
+INSERT INTO "Task" ("userId", "task", "deadline", "details", "done", "createdAt") 
 VALUES 
-(1, 1, 'Morning blood sugar', '2025-06-13T00:00:00Z', 'Measure blood sugar before meal', false, '2025-06-13T06:50:00Z'),
-(2, 1, 'Morning long-acting insulin', '2025-06-13T00:05:00Z', 'Inject basal insulin dose', true, '2025-06-13T06:55:00Z'),
-(3, 1, 'Take rapid-acting insulin (before breakfast)', '2025-06-13T00:10:00Z', 'Inject before breakfast', false, '2025-06-13T07:00:00Z'),
-(4, 1, 'Eat breakfast', '2025-06-13T00:15:00Z', '', false, '2025-06-13T07:05:00Z'),
-(5, 1, 'Check blood sugar (mid-morning)', '2025-06-13T03:00:00Z', '', false, '2025-06-13T09:00:00Z'),
-(6, 1, 'Check blood sugar (lunch)', '2025-06-13T05:00:00Z', '', false, '2025-06-13T11:00:00Z'),
-(7, 1, 'Take rapid-acting insulin (lunch)', '2025-06-13T05:05:00Z', 'Inject before lunch', false, '2025-06-13T11:05:00Z'),
-(8, 1, 'Eat lunch', '2025-06-13T05:10:00Z', '', false, '2025-06-13T11:10:00Z'),
-(9, 1, 'Check blood sugar (mid-afternoon)', '2025-06-13T08:00:00Z', '', false, '2025-06-13T14:00:00Z'),
-(10, 1, 'Check blood sugar (dinner)', '2025-06-13T11:00:00Z', '', false, '2025-06-13T17:00:00Z'),
-(11, 1, 'Take rapid-acting insulin (dinner)', '2025-06-13T11:05:00Z', 'Inject before dinner', false, '2025-06-13T17:05:00Z'),
-(12, 1, 'Eat dinner', '2025-06-13T11:10:00Z', '', false, '2025-06-13T17:10:00Z'),
-(13, 1, 'Check blood sugar (night)', '2025-06-13T14:00:00Z', '', false, '2025-06-13T20:00:00Z'),
-(14, 1, 'Check final blood sugar (bedtime)', '2025-06-13T15:00:00Z', '', false, '2025-06-13T21:00:00Z');
+(1, 'Morning blood sugar', '2025-06-13T00:00:00Z', 'Measure blood sugar before meal', false, '2025-06-13T06:50:00Z'),
+(1, 'Morning long-acting insulin', '2025-06-13T00:05:00Z', 'Inject basal insulin dose', true, '2025-06-13T06:55:00Z'),
+(1, 'Take rapid-acting insulin (before breakfast)', '2025-06-13T00:10:00Z', 'Inject before breakfast', false, '2025-06-13T07:00:00Z'),
+(1, 'Eat breakfast', '2025-06-13T00:15:00Z', '', false, '2025-06-13T07:05:00Z'),
+(1, 'Check blood sugar (mid-morning)', '2025-06-13T03:00:00Z', '', false, '2025-06-13T09:00:00Z'),
+(1, 'Check blood sugar (lunch)', '2025-06-13T05:00:00Z', '', false, '2025-06-13T11:00:00Z'),
+(1, 'Take rapid-acting insulin (lunch)', '2025-06-13T05:05:00Z', 'Inject before lunch', false, '2025-06-13T11:05:00Z'),
+(1, 'Eat lunch', '2025-06-13T05:10:00Z', '', false, '2025-06-13T11:10:00Z'),
+(1, 'Check blood sugar (mid-afternoon)', '2025-06-13T08:00:00Z', '', false, '2025-06-13T14:00:00Z'),
+(1, 'Check blood sugar (dinner)', '2025-06-13T11:00:00Z', '', false, '2025-06-13T17:00:00Z'),
+(1, 'Take rapid-acting insulin (dinner)', '2025-06-13T11:05:00Z', 'Inject before dinner', false, '2025-06-13T17:05:00Z'),
+(1, 'Eat dinner', '2025-06-13T11:10:00Z', '', false, '2025-06-13T17:10:00Z'),
+(1, 'Check blood sugar (night)', '2025-06-13T14:00:00Z', '', false, '2025-06-13T20:00:00Z'),
+(1, 'Check final blood sugar (bedtime)', '2025-06-13T15:00:00Z', '', false, '2025-06-13T21:00:00Z');

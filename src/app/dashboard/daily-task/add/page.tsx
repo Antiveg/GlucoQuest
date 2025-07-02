@@ -21,24 +21,34 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { CreateTask } from "@/types/task";
+import { useCreateUserTask } from "@/lib/client-queries/tasks";
 
 export default function AddNewQuestPage() {
+
+  const toDatetimeLocal = (date: Date) => {
+    const pad = (n: number) => n.toString().padStart(2, '0');
+    return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+  }
+
+  const [currentDate, setCurrentDate] = useState<Date>(new Date("2025-06-13T12:00:00Z"));
   const [form, setForm] = useState<CreateTask>({
     task: "",
-    deadline: "19:00",
+    deadline: toDatetimeLocal(new Date()),
     details: "",
     done: false,
   });
+  const { mutate: mutateCreateUserTask, isPending } = useCreateUserTask(currentDate.toISOString())
 
-  const handleChange =
-    (field: keyof typeof form) =>
-    (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-      setForm({ ...form, [field]: e.target.value });
+  const handleChange = (field: keyof typeof form) => {
+    return (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const value = e.target.value;
+      if(field === "deadline") setCurrentDate(new Date(value))
+      setForm(prevForm => ({
+        ...prevForm,
+        [field]: value,
+      }));
     };
-
-  const handleSubmit = () => {
-    console.log("Submitting Task:", form);
-  };
+  }
 
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
@@ -87,7 +97,7 @@ export default function AddNewQuestPage() {
               </Label>
               <Input
                 id="deadline"
-                type="time"
+                type="datetime-local"
                 className="border-black h-12"
                 value={form.deadline}
                 onChange={handleChange("deadline")}
@@ -113,7 +123,15 @@ export default function AddNewQuestPage() {
           <CardFooter className="flex flex-col sm:flex-row justify-end gap-3 p-6 border-t-2 border-black">
             <Button
               className="cursor-pointer w-full sm:w-auto bg-[#4741A6] text-white font-bold text-lg h-12 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:bg-[#3b368a] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
-              onClick={handleSubmit}
+              onClick={() => {
+                const deadlineUTC = new Date(form.deadline).toISOString();
+                console.log(deadlineUTC)
+                mutateCreateUserTask({
+                  ...form,
+                  deadline: deadlineUTC,
+                })
+              }}
+              disabled={isPending}
             >
               Add Quest to Log
             </Button>

@@ -1,14 +1,18 @@
+import { Prisma } from "@/database/prisma-client";
 import prisma from "../config/prisma"
 
-export const getDailyTasksByUserIdQuery = async (userId : number, date : Date) => {
-    const startOfDay = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-    const endOfDay = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate() + 1));
+export const getDailyTasksByUserIdQuery = async (userId : number, date : Date, timezoneOffsetMinutes: number) => {
+    console.log(date)
+    const startOfDayUTC = new Date(date.getTime() - timezoneOffsetMinutes * 60 * 1000);
+    console.log(startOfDayUTC)
+    const endOfDayUTC = new Date(startOfDayUTC.getTime() + 24 * 60 * 60 * 1000);
+    console.log(endOfDayUTC)
     const temp = await prisma.task.findMany({
         where: { 
             userId: userId,
             deadline: {
-                gte: startOfDay,
-                lt: endOfDay,
+                gte: startOfDayUTC,
+                lt: endOfDayUTC,
             },
         },
         orderBy : { deadline: 'asc' },
@@ -31,4 +35,9 @@ export const deleteTaskByIdQuery = async (userId: number, taskId: number) => {
         },
     });
     return deletedRecord;
+}
+
+export const createUserTaskQuery = async (data: Prisma.TaskCreateInput) => {
+    const createdRecord = await prisma.task.create({data})
+    return createdRecord;
 }

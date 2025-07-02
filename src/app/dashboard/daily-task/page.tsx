@@ -152,7 +152,7 @@ const initialTasks: Task[] = [
 
 export default function DailyToDoListPage() {
   // const [tasks, setTasks] = useState(initialTasks);
-  const [currentDate, setCurrentDate] = useState(new Date("2025-06-13T12:00:00Z"));
+  const [currentDate, setCurrentDate] = useState(new Date(Date.UTC(2025, 5, 13, 0, 0, 0)));
   const { data: tasks, isLoading: UserDailyTasksLoading, isError, error } = useDailyTasksByUserId(currentDate.toISOString())
   const { mutate: mutateUpdateTaskCompletionStatus, isPending: isPendingUpdate } = useUpdateTaskCompletionStatus(currentDate.toISOString())
   const { mutate: mutateDeleteTaskById, isPending: isPendingDelete } = useDeleteTaskById(currentDate.toISOString())
