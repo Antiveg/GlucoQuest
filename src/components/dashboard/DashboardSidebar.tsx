@@ -9,6 +9,7 @@ import {
   Apple,
   Swords,
   LayoutDashboard,
+  LinkIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -72,10 +73,15 @@ export default function DashboardSidebar({
       href: "/dashboard/daily-task",
       icon: <Swords className="h-5 w-5" />,
     },
+    {
+      name: "CGM",
+      href: "/dashboard/cgm",
+      icon: <LinkIcon className="h-5 w-5" />,
+    },
   ];
 
   const userName = "Alex the Adventurer";
-  const { data: session } = useSession()
+  const { data: session } = useSession();
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -119,18 +125,24 @@ export default function DashboardSidebar({
 
         <div className="p-4 border-t-2 border-black space-y-2">
           <div className="flex items-center gap-3">
-            {session?.user?.image ?
-            <Image
-              src={session.user.image}
-              alt={session.user.name ?? "User"}
-              width={48}
-              height={48}
-              className="rounded-full object-cover"
-            /> :
-            <div className="h-12 w-12 rounded-full bg-[#9BBBFC] flex items-center justify-center border-2 border-black">
-              <span className="text-2xl font-bold">{session?.user?.name?.charAt(0).toUpperCase()}</span>
-            </div>}
-            <span className="font-bold text-lg truncate">{session?.user?.name ?? "#N/A"}</span>
+            {session?.user?.image ? (
+              <Image
+                src={session.user.image}
+                alt={session.user.name ?? "User"}
+                width={48}
+                height={48}
+                className="rounded-full object-cover"
+              />
+            ) : (
+              <div className="h-12 w-12 rounded-full bg-[#9BBBFC] flex items-center justify-center border-2 border-black">
+                <span className="text-2xl font-bold">
+                  {session?.user?.name?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+            <span className="font-bold text-lg truncate">
+              {session?.user?.name ?? "#N/A"}
+            </span>
           </div>
           <Link
             href="/"
