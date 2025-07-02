@@ -1,5 +1,5 @@
 import { Task } from "@/database/prisma-client";
-import { getDailyTasksByUserIdQuery, updateTaskCompletionStatusQuery } from "@/lib/data-layers/tasks";
+import { deleteTaskByIdQuery, getDailyTasksByUserIdQuery, updateTaskCompletionStatusQuery } from "@/lib/data-layers/tasks";
 
 export async function getDailyTasksByUserIdService(uid : string, date : string){
     try {
@@ -40,4 +40,24 @@ export async function updateTaskCompletionStatusService(taskId: string, toggle: 
     console.error(error);
     throw new Error("Internal Server Error");
   }
+}
+
+export async function deleteTaskByIdService(userId: string, taskId: string) {
+    try {
+      const taskIdNum = Number(taskId);
+      const userIdNum = Number(userId);
+      if (isNaN(taskIdNum)) throw new Error("Invalid task ID");
+
+      const deletedReading = await deleteTaskByIdQuery(userIdNum, taskIdNum);
+      if (!deletedReading) throw new Error("Failed to delete user's daily task.");
+      
+      return deletedReading
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        console.error(error);
+        throw new Error(error.message);
+      }
+      console.error(error);
+      throw new Error("Internal Server Error");
+    }
 }

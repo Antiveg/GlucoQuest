@@ -17,7 +17,7 @@ export function useGlucoseReadingsByUserId() {
 
 // delete a user's glucose reading log record
 async function deleteUserGlucoseReadingById(id: number) {
-  const res = await fetch(`/api/user/glucose-readings/${id}`, {
+  const res = await fetch(`/api/user/glucose-readings`, {
     method: "DELETE",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ id }),

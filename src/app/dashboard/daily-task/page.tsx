@@ -17,7 +17,7 @@ import {
 import { format, addDays, subDays } from "date-fns";
 import { Task } from "@/types";
 import Link from "next/link";
-import { useDailyTasksByUserId, useUpdateTaskCompletionStatus } from "@/lib/client-queries/tasks";
+import { useDailyTasksByUserId, useDeleteTaskById, useUpdateTaskCompletionStatus } from "@/lib/client-queries/tasks";
 import Loading from "@/components/loading";
 import ErrorBox from "@/components/error-box";
 
@@ -154,7 +154,8 @@ export default function DailyToDoListPage() {
   // const [tasks, setTasks] = useState(initialTasks);
   const [currentDate, setCurrentDate] = useState(new Date("2025-06-13T12:00:00Z"));
   const { data: tasks, isLoading: UserDailyTasksLoading, isError, error } = useDailyTasksByUserId(currentDate.toISOString())
-  const { mutate: mutateUpdateTaskCompletionStatus, isPending } = useUpdateTaskCompletionStatus(currentDate.toISOString())
+  const { mutate: mutateUpdateTaskCompletionStatus, isPending: isPendingUpdate } = useUpdateTaskCompletionStatus(currentDate.toISOString())
+  const { mutate: mutateDeleteTaskById, isPending: isPendingDelete } = useDeleteTaskById(currentDate.toISOString())
 
   // const toggleTask = (taskId: number) => {
   //   setTasks((prevTasks) =>
@@ -231,8 +232,10 @@ export default function DailyToDoListPage() {
                 <TaskItem
                   key={task.id}
                   task={task}
+                  isPendingUpdate={isPendingUpdate}
+                  isPendingDelete={isPendingDelete}
                   mutateUpdate={({ taskId, toggle }) => mutateUpdateTaskCompletionStatus({ taskId, toggle })}
-                  onDelete={() => console.log("delete")}
+                  mutateDelete={(taskId) => mutateDeleteTaskById(taskId)}
                 />
               ))
             ) : (
@@ -261,11 +264,13 @@ export default function DailyToDoListPage() {
 
 interface TaskItemProps {
   task: Task;
+  isPendingUpdate: boolean;
+  isPendingDelete: boolean;
   mutateUpdate: ({ taskId, toggle } : {taskId: number, toggle: boolean}) => void;
-  onDelete: (id: number) => void;
+  mutateDelete: (taskId: number) => void;
 }
 
-const TaskItem = ({ task, mutateUpdate, onDelete }: TaskItemProps) => {
+const TaskItem = ({ task, isPendingUpdate, isPendingDelete, mutateUpdate, mutateDelete }: TaskItemProps) => {
   return (
     <div
       className={`flex items-start gap-4 p-4 rounded-xl transition-all ${
@@ -275,6 +280,7 @@ const TaskItem = ({ task, mutateUpdate, onDelete }: TaskItemProps) => {
       <Checkbox
         checked={task.done}
         onCheckedChange={() => mutateUpdate({taskId: task.id, toggle: !task.done})}
+        disabled={isPendingUpdate}
         id={`task-${task.id}`}
         className="h-6 w-6 mt-1 rounded-md border-2 border-black data-[state=checked]:bg-[#4741A6] data-[state=checked]:text-white"
       />
@@ -303,7 +309,8 @@ const TaskItem = ({ task, mutateUpdate, onDelete }: TaskItemProps) => {
           variant="ghost"
           size="icon"
           className="h-9 w-9 rounded-full text-red-500 hover:text-red-600"
-          onClick={() => onDelete(task.id)}
+          onClick={() => mutateDelete(task.id)}
+          disabled={isPendingDelete}
         >
           <Trash2 size={18} />
         </Button>

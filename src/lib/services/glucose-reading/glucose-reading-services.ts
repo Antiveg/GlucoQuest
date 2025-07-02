@@ -30,7 +30,7 @@ export async function deleteGlucoseReadingByIdService(id: number, userId: number
         const deletedReading = await deleteGlucoseReadingByIdQuery(id, userId);
         if (!deletedReading) throw new Error("Failed to delete glucose reading.");
 
-        return { message: "Glucose reading deleted successfully.", deletedReading };
+        return deletedReading
     } catch (error: unknown) {
         if (error instanceof Error) {
             console.error(error);

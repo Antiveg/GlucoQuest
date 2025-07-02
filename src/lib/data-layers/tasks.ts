@@ -22,3 +22,13 @@ export const updateTaskCompletionStatusQuery = async (taskId: number, toggle: bo
         data: { done: toggle },
     });
 };
+
+export const deleteTaskByIdQuery = async (userId: number, taskId: number) => {
+    const deletedRecord = await prisma.task.delete({
+        where: { 
+            id: taskId,
+            userId: userId
+        },
+    });
+    return deletedRecord;
+}

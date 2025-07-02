@@ -18,6 +18,7 @@ export function useDailyTasksByUserId(date: string) {
   });
 }
 
+// update task completion (the done attribute in Task entity)
 async function updateTaskCompletionStatus({ taskId, toggle } : { taskId: number, toggle: boolean }) {
   const res = await fetch(`/api/user/daily-tasks/${taskId}`, {
     method: "PATCH",
@@ -52,6 +53,32 @@ export function useUpdateTaskCompletionStatus(date : string) {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["user-daily-tasks", date] });
+    },
+  });
+}
+
+// delete task by id (the done attribute in Task entity)
+async function deleteTaskById(taskId : number) {
+  const res = await fetch(`/api/user/daily-tasks/${taskId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" }
+  });
+  if (!res.ok) throw new Error("Failed to update task completion status");
+  return taskId;
+}
+
+export function useDeleteTaskById(date: string) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteTaskById,
+    onSuccess: (taskId) => {
+      queryClient.setQueryData<Task[]>(["user-daily-tasks", date], (oldData) => {
+        return oldData?.filter((task) => task.id !== taskId);
+      });
+    },
+    onError: (error) => {
+      console.error("Error deleting task:", error);
     },
   });
 }
