@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getGlucoseReadingsByUserIdService } from "@/lib/services/user/user-basic-services";
+import { deleteGlucoseReadingByIdService, getGlucoseReadingsByUserIdService } from "@/lib/services/glucose-reading/glucose-reading-services";
 import { protectApiRoute } from "@/lib/auth/protect-api";
 
 export async function GET() {
@@ -9,7 +9,7 @@ export async function GET() {
 
     try {
         const response = await getGlucoseReadingsByUserIdService(session.user.id)
-        console.log(response)
+        // console.log(response)
         return NextResponse.json(response, { status: 201 });
     }catch (error: unknown) {
         console.error("GET /api/users error:", error);

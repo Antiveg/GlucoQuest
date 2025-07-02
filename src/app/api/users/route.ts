@@ -21,9 +21,6 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
 
-    const session = await protectApiRoute()
-    if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-
     try {
         const body = await req.json();
         const { name, email, password } = body;
@@ -37,4 +34,3 @@ export async function POST(req: NextRequest) {
         );
     }
 }
-

@@ -38,7 +38,7 @@ import { format, addDays, subDays } from "date-fns";
 import Link from "next/link";
 import { GlucoseReading } from "@/types";
 import Loading from "@/components/loading";
-import { useGlucoseReadingsByUserId } from "@/lib/client-queries/users";
+import { useDeleteUserGlucoseReadingById, useGlucoseReadingsByUserId } from "@/lib/client-queries/users";
 import ErrorBox from "@/components/error-box";
 
 // const UserGlucoseReadings: GlucoseReading[] = [
@@ -110,6 +110,7 @@ import ErrorBox from "@/components/error-box";
 export default function DailyGlucosePage() {
 
   const { data: UserGlucoseReadings, isLoading: UserGlucoseReadingsLoading, isError, error } = useGlucoseReadingsByUserId()
+  const { mutate, isPending } = useDeleteUserGlucoseReadingById()
 
   const [currentDate, setCurrentDate] = useState(new Date("2025-06-13T12:00:00Z"));
   const [unit, setUnit] = useState<"mg/dL" | "mmol/L">("mg/dL");
@@ -389,19 +390,22 @@ export default function DailyGlucosePage() {
                           {reading.notes || "..."}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
+                          {/* <Button
                             variant="ghost"
                             size="icon"
                             className="rounded-full h-8 w-8 mr-1"
                           >
                             <Pencil className="h-4 w-4" />
-                          </Button>
+                          </Button> */}
                           <Button
                             variant="ghost"
                             size="icon"
                             className="rounded-full h-8 w-8 text-red-500"
+                            onClick={() => mutate(reading.id)}
+                            disabled={isPending}
                           >
-                            <Trash2 className="h-4 w-4" />
+                            {isPending ?
+                            <div className="h-4 w-4 border-4 border-t-4 border-red-500 border-solid rounded-full animate-spin" />: <Trash2 className="h-4 w-4" />}
                           </Button>
                         </TableCell>
                       </TableRow>

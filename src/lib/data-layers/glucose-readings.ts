@@ -17,3 +17,17 @@ export const queryGlucoseReadingsByUserId = async (userId : number) => {
     // console.log(temp)
     return temp
 }
+
+export const deleteGlucoseReadingById = async (id: number, userId : number) => {
+    const deletedRecord = await prisma.glucoseReading.delete({
+        where: { id: id, userId: userId },
+    });
+    return deletedRecord;
+}
+
+export const getGlucoseReadingById = async (id: number) => {
+    const record = await prisma.glucoseReading.findFirst({
+        where: { id: id },
+    })
+    return record
+}

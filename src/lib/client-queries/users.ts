@@ -51,3 +51,28 @@ export function useGlucoseReadingsByUserId() {
     queryFn: fetchGlucoseReadingsByUserId,
   });
 }
+
+// delete a user's glucose reading log record
+async function deleteUserGlucoseReadingById(id: number) {
+  const res = await fetch(`/api/user/glucose-readings/${id}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ id }),
+  });
+  if (!res.ok) throw new Error("Failed to delete glucose reading");
+  return res.json();
+}
+
+export function useDeleteUserGlucoseReadingById() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: deleteUserGlucoseReadingById,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["user-glucose-readings"] });
+    },
+    onError: (error) => {
+      console.error("Error deleting glucose reading:", error);
+    },
+  });
+}

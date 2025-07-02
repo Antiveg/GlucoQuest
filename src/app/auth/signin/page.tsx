@@ -151,7 +151,7 @@ export default function SignIn() {
           <div className="text-center">
             <p className="text-sm text-gray-600">
               {"New to the quest? "}
-              <Button variant="link" className="px-0 text-purple-600 hover:text-purple-700 font-semibold">
+              <Button variant="link" className="px-0 text-purple-600 hover:text-purple-700 font-semibold" onClick={() => router.push('/auth/signup')}>
                 Join the Adventure
               </Button>
             </p>

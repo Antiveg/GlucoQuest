@@ -52,28 +52,3 @@ export async function createUserService(user : Prisma.UserCreateInput) {
         throw new Error("Internal Server Error");
     }
 }
-
-export async function getGlucoseReadingsByUserIdService(uid : string){
-
-    const userId = Number(uid)
-    if (typeof userId !== 'number' || isNaN(userId)) throw new Error("Invalid user id queried.");
-
-    try {
-        const glucoseReadings = await queryGlucoseReadingsByUserId(userId);
-        if (!glucoseReadings) throw new Error("Failed to query user's glucose reading to database ...");
-        const formattedReadings = glucoseReadings.map((reading) => ({
-            ...reading,
-            time: reading.time.toISOString(),
-            createdAt: reading.createdAt.toISOString()
-        }))
-        // console.log(formattedReadings)
-        return formattedReadings;
-    } catch (error: unknown) {
-        if(error instanceof Error){
-            console.error(error);
-            throw new Error(error.message);
-        }
-        console.error(error);
-        throw new Error("Internal Server Error");
-    }
-}
