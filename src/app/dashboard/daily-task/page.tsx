@@ -17,7 +17,9 @@ import {
 import { format, addDays, subDays } from "date-fns";
 import { Task } from "@/types";
 import Link from "next/link";
-import { useDailyTasksByUserId } from "@/lib/client-queries/tasks";
+import { useDailyTasksByUserId, useUpdateTaskCompletionStatus } from "@/lib/client-queries/tasks";
+import Loading from "@/components/loading";
+import ErrorBox from "@/components/error-box";
 
 const initialTasks: Task[] = [
   {
@@ -151,7 +153,8 @@ const initialTasks: Task[] = [
 export default function DailyToDoListPage() {
   // const [tasks, setTasks] = useState(initialTasks);
   const [currentDate, setCurrentDate] = useState(new Date("2025-06-13T12:00:00Z"));
-  const { data: tasks, isLoading, isError, error } = useDailyTasksByUserId(currentDate.toISOString())
+  const { data: tasks, isLoading: UserDailyTasksLoading, isError, error } = useDailyTasksByUserId(currentDate.toISOString())
+  const { mutate: mutateUpdateTaskCompletionStatus, isPending } = useUpdateTaskCompletionStatus(currentDate.toISOString())
 
   // const toggleTask = (taskId: number) => {
   //   setTasks((prevTasks) =>
@@ -172,6 +175,9 @@ export default function DailyToDoListPage() {
   const progressPercentage = useMemo(
     () => ((tasks ?? []).length > 0 ? (completedTasksCount / (tasks?.length ?? 0)) * 100 : 0)
   , [completedTasksCount, tasks]);
+  
+  if(UserDailyTasksLoading) return <Loading message="Loading User Daily Tasks"/>
+  if(isError) return <ErrorBox error={error}/>
 
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
@@ -225,7 +231,7 @@ export default function DailyToDoListPage() {
                 <TaskItem
                   key={task.id}
                   task={task}
-                  onToggle={() => console.log("toggle")}
+                  mutateUpdate={({ taskId, toggle }) => mutateUpdateTaskCompletionStatus({ taskId, toggle })}
                   onDelete={() => console.log("delete")}
                 />
               ))
@@ -255,11 +261,11 @@ export default function DailyToDoListPage() {
 
 interface TaskItemProps {
   task: Task;
-  onToggle: (id: number) => void;
+  mutateUpdate: ({ taskId, toggle } : {taskId: number, toggle: boolean}) => void;
   onDelete: (id: number) => void;
 }
 
-const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
+const TaskItem = ({ task, mutateUpdate, onDelete }: TaskItemProps) => {
   return (
     <div
       className={`flex items-start gap-4 p-4 rounded-xl transition-all ${
@@ -268,7 +274,7 @@ const TaskItem = ({ task, onToggle, onDelete }: TaskItemProps) => {
     >
       <Checkbox
         checked={task.done}
-        onCheckedChange={() => onToggle(task.id)}
+        onCheckedChange={() => mutateUpdate({taskId: task.id, toggle: !task.done})}
         id={`task-${task.id}`}
         className="h-6 w-6 mt-1 rounded-md border-2 border-black data-[state=checked]:bg-[#4741A6] data-[state=checked]:text-white"
       />

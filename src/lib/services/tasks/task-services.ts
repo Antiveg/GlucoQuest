@@ -1,5 +1,5 @@
 import { Task } from "@/database/prisma-client";
-import { getDailyTasksByUserIdQuery } from "@/lib/data-layers/tasks";
+import { getDailyTasksByUserIdQuery, updateTaskCompletionStatusQuery } from "@/lib/data-layers/tasks";
 
 export async function getDailyTasksByUserIdService(uid : string, date : string){
     try {
@@ -23,4 +23,21 @@ export async function getDailyTasksByUserIdService(uid : string, date : string){
         console.error(error);
         throw new Error("Internal Server Error");
     }
+}
+
+export async function updateTaskCompletionStatusService(taskId: string, toggle: boolean) {
+  try {
+    const taskIdNum = Number(taskId);
+    if (isNaN(taskIdNum)) throw new Error("Invalid task ID");
+
+    const updatedTask = await updateTaskCompletionStatusQuery(taskIdNum, toggle);
+    return updatedTask;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error);
+      throw new Error(error.message);
+    }
+    console.error(error);
+    throw new Error("Internal Server Error");
+  }
 }

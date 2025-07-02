@@ -15,3 +15,10 @@ export const getDailyTasksByUserIdQuery = async (userId : number, date : Date) =
     })
     return temp
 }
+
+export const updateTaskCompletionStatusQuery = async (taskId: number, toggle: boolean) => {
+    return await prisma.task.update({
+        where: { id: taskId },
+        data: { done: toggle },
+    });
+};
