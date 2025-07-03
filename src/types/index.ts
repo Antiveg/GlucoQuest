@@ -52,11 +52,12 @@ export interface Task {
 
 export interface CgmDevice {
   id: number;
-  user_id: number;
-  device_id: string; // unique device serial or ID
-  device_name?: string;
-  connected_at: string;
-  last_sync_at?: string;
+  userId: number;
+  deviceId: string; // unique device serial or ID
+  deviceName?: string;
+  connectedAt: string;
+  lastSyncAt?: string;
+  isConnected?: boolean;
 }
 
 export interface Notification {

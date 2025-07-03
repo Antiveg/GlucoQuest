@@ -85,7 +85,8 @@ model CgmDevice {
   userId      Int
   deviceId    String    @unique
   deviceName  String?
-  connectedAt DateTime  @default(now())               
+  connectedAt DateTime  @default(now())    
+  isConnected Boolean?  @default(false)           
   lastSyncAt  DateTime?
 
   user        User      @relation(fields: [userId], references: [id])

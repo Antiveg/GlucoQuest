@@ -24,3 +24,8 @@ VALUES
 (1, 'Eat dinner', '2025-06-13T11:10:00Z', '', false, '2025-06-13T17:10:00Z'),
 (1, 'Check blood sugar (night)', '2025-06-13T14:00:00Z', '', false, '2025-06-13T20:00:00Z'),
 (1, 'Check final blood sugar (bedtime)', '2025-06-13T15:00:00Z', '', false, '2025-06-13T21:00:00Z');
+
+INSERT INTO "CgmDevice" ("deviceName", "deviceId", "isConnected", "lastSyncAt", "userId")
+VALUES 
+('Dexcom G7', 'A4B8-C7D6-E5F4', true, NOW(), 1),
+('Freestyle Libre 3', 'F1E2-D3C4-B5A6', false, NOW(), 1);
