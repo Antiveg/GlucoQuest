@@ -80,7 +80,6 @@ export default function DashboardSidebar({
     },
   ];
 
-  const userName = "Alex the Adventurer";
   const { data: session } = useSession();
 
   return (
