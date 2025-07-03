@@ -31,6 +31,9 @@ export async function createUserCGMDeviceService(device: CgmDevice) {
         if (device.deviceId.length <= 0) throw new Error("Please enter a valid device id.");
         if (!device.connectedAt) throw new Error("First connection time is required.");
 
+        const disconnectedDevices = await disconnectCGMDevicesConnectionByUserIdQuery(Number(device.userId))
+        if(disconnectedDevices.count > 1) console.log("There is data anomaly where user has 2 connected devices...")
+
         const userId = device.userId
         const input = {
             ...device,

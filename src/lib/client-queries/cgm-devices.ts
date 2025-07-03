@@ -1,4 +1,4 @@
-import { CgmDevice } from "@/types";
+import { CgmDevice, CgmDeviceInput } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 // get user cgm devices by userid
@@ -16,7 +16,7 @@ export function useCGMDevicesByUserId() {
 }
 
 // Create new cgm device for a user
-async function createCGMDevice(device: CgmDevice) {
+async function createCGMDevice(device: CgmDeviceInput) {
   const res = await fetch(`/api/user/cgm-devices`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

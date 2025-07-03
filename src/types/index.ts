@@ -50,10 +50,13 @@ export interface Task {
   created_at: string;
 }
 
-export interface CgmDevice {
+export interface CgmDevice extends CgmDeviceInput {
   id: number;
   userId: number;
-  deviceId: string; // unique device serial or ID
+}
+
+export interface CgmDeviceInput {
+  deviceId: string;
   deviceName?: string;
   connectedAt: string;
   lastSyncAt?: string;

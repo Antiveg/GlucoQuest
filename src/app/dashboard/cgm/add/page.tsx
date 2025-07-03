@@ -14,10 +14,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Smartphone, Fingerprint, ArrowLeft, LinkIcon } from "lucide-react";
 import Link from "next/link";
+import { useCreateCGMDevice } from "@/lib/client-queries/cgm-devices";
 
 export default function DeviceIntegrationPage() {
   const [deviceName, setDeviceName] = useState("Dexcom G7");
   const [deviceId, setDeviceId] = useState("A4B8-C7D6-E5F4");
+  const { mutate: createCGMDevice, isPending: createPending } = useCreateCGMDevice()
 
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
@@ -82,7 +84,18 @@ export default function DeviceIntegrationPage() {
             </div>
           </CardContent>
           <CardFooter className="flex justify-end p-6 border-t-2 border-black">
-            <Button className="w-full sm:w-auto bg-[#4741A6] text-white font-bold text-lg h-12 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:bg-[#3b368a] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all">
+            <Button
+            className="w-full sm:w-auto bg-[#4741A6] text-white font-bold text-lg h-12 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:bg-[#3b368a] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all"
+            onClick={() => {
+              const date = (new Date()).toISOString()
+              createCGMDevice({ 
+                deviceId: deviceId, 
+                deviceName: deviceName,
+                isConnected: true,
+                connectedAt: date,
+                lastSyncAt: date
+              })
+            }}>
               Save & Connect
             </Button>
           </CardFooter>
