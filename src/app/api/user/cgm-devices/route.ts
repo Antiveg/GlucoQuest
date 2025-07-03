@@ -1,5 +1,5 @@
 import { protectApiRoute } from "@/lib/auth/protect-api";
-import { createUserCGMDeviceService, getCGMDeviceByUserIdService } from "@/lib/services/cgm-device/cgm-device-services";
+import { createUserCGMDeviceService, deleteUserCGMDeviceService, getCGMDeviceByUserIdService } from "@/lib/services/cgm-device/cgm-device-services";
 import { NextRequest, NextResponse } from "next/server";
 
 export async function GET() {
@@ -33,6 +33,24 @@ export async function POST(request : NextRequest) {
         return NextResponse.json(response, { status: 201 });
     }catch (error: unknown) {
         console.error("POST /api/user/cgm-devices error:", error);
+        return NextResponse.json(
+            { message: error instanceof Error ? error.message : "Internal Server Error" },
+            { status: 500 }
+        );
+    }
+}
+
+export async function DELETE(request : NextRequest) {
+
+    const session = await protectApiRoute()
+    if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+
+    try {
+        const { did } = await request.json();
+        const response = await deleteUserCGMDeviceService(did, session.user.id)
+        return NextResponse.json(response, { status: 201 });
+    }catch (error: unknown) {
+        console.error("DELETE /api/user/cgm-devices error:", error);
         return NextResponse.json(
             { message: error instanceof Error ? error.message : "Internal Server Error" },
             { status: 500 }

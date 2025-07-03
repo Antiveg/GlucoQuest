@@ -41,3 +41,95 @@ export function useCreateCGMDevice() {
     },
   });
 }
+
+// Update cgm device connection status for a user
+async function updateCGMDeviceConnectionStatus({ did, lastSyncAt, isConnected } : { did: number, lastSyncAt : string, isConnected : boolean }) {
+  const res = await fetch(`/api/user/cgm-devices/connect`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ did, lastSyncAt, isConnected }),
+  });
+  if (!res.ok) throw new Error("Failed to update cgm device connection status");
+  return res.json();
+}
+
+export function useUpdateCGMDeviceConnectionStatus() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateCGMDeviceConnectionStatus,
+    onSuccess: (updatedDevice) => {
+      const cacheKey = ["user-cgm-devices"];
+      queryClient.setQueryData<CgmDevice[]>(cacheKey, (currentDevices) => {
+        if (!currentDevices) return [updatedDevice]
+        return currentDevices.map((device) => ({
+          ...device,
+          isConnected: (device.id === updatedDevice.id) ? (updatedDevice.isConnected) : false,
+          lastSyncAt: (device.id === updatedDevice.id) ? updatedDevice.lastSyncAt : device.lastSyncAt
+        }));
+      });
+    },
+    onError: (error) => {
+      console.error("Error updating CGM device connection status:", error);
+    },
+  });
+}
+
+// Sync CGM device for a user
+async function syncCGMDevice({ did, lastSyncAt, isConnected }: { did: number; lastSyncAt: string; isConnected: boolean }) {
+  const res = await fetch(`/api/user/cgm-devices/sync`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ did, lastSyncAt, isConnected }),
+  });
+
+  if (!res.ok) throw new Error("Failed to sync CGM device");
+  return res.json();
+}
+
+export function useSyncCGMDevice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: syncCGMDevice,
+    onSuccess: (syncedDevice) => {
+      const cacheKey = ["user-cgm-devices"];
+      queryClient.setQueryData<CgmDevice[]>(cacheKey, (currentDevices) => {
+        if (!currentDevices) return [syncedDevice];
+        return currentDevices.map((device) => ({
+          ...device,
+          lastSyncAt: (device.id === syncedDevice.id ? syncedDevice.lastSyncAt : device.lastSyncAt),
+        }));
+      });
+    },
+    onError: (error) => {
+      console.error("Error syncing CGM device:", error);
+    },
+  });
+}
+
+// Delete CGM device for a user
+async function deleteCGMDevice(did: number) {
+  const res = await fetch(`/api/user/cgm-devices`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ did }),
+  });
+  if (!res.ok) throw new Error("Failed to delete CGM device");
+  return res.json();
+}
+
+export function useDeleteCGMDevice() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: deleteCGMDevice,
+    onSuccess: (deletedDevice) => {
+      const cacheKey = ["user-cgm-devices"];
+      queryClient.setQueryData<CgmDevice[]>(cacheKey, (currentDevices) => {
+        if (!currentDevices) return [];
+        return currentDevices.filter((device) => device.id !== deletedDevice.id);
+      });
+    },
+    onError: (error) => {
+      console.error("Error deleting CGM device:", error);
+    },
+  });
+}

@@ -17,13 +17,14 @@ import {
   Plus,
   LinkIcon,
   Power,
+  Trash,
 } from "lucide-react";
 import { format } from "date-fns";
 import Link from "next/link";
-import { useCGMDevicesByUserId } from "@/lib/client-queries/cgm-devices";
+import { useCGMDevicesByUserId, useDeleteCGMDevice, useSyncCGMDevice, useUpdateCGMDeviceConnectionStatus } from "@/lib/client-queries/cgm-devices";
 import Loading from "@/components/loading";
 import ErrorBox from "@/components/error-box";
-import { CgmDevice } from "@/database/prisma-client";
+import { FaSpinner } from "react-icons/fa";
 
 export default function DeviceIntegrationPage() {
   // const [device, setDevice] = useState({
@@ -34,6 +35,9 @@ export default function DeviceIntegrationPage() {
   //   isSyncing: false,
   // });
   const { data: devices, isLoading: getDeviceLoading, isError, error } = useCGMDevicesByUserId()
+  const { mutate: changeConnectionStatus, isPending: connectionChangePending } = useUpdateCGMDeviceConnectionStatus()
+  const { mutate: changeLastSync, isPending: lastSyncPending } = useSyncCGMDevice()
+  const { mutate: deleteCGMDevice, isPending: deletePending } = useDeleteCGMDevice()
 
   if(getDeviceLoading) return <Loading message="Loading User Glucose Loading"/>
   if(isError) return <ErrorBox error={error}/>
@@ -94,19 +98,45 @@ export default function DeviceIntegrationPage() {
                   </p>
                 </div>
               </CardContent>
-              <CardFooter className="p-6 border-t-2 border-black">
+              <CardFooter className="p-6 border-t-2 border-black grid grid-cols-3 gap-2">
                 <Button
-                  // onClick={() => handleSync()}
-                  // disabled={device.isSyncing}
+                  onClick={() => changeLastSync({ 
+                    did: device.id,
+                    lastSyncAt: new Date().toISOString(),
+                    isConnected: Boolean(device.isConnected)
+                  })}
+                  disabled={lastSyncPending || !device.isConnected}
                   variant="outline"
-                  className="cursor-pointer w-full h-12 rounded-lg border-2 border-black font-bold"
+                  className="cursor-pointer h-12 rounded-lg border-2 border-black font-bold"
                 >
-                  {/* <RefreshCw
+                  <RefreshCw
                     className={`mr-2 h-5 w-5 ${
-                      device.isSyncing ? "animate-spin" : ""
+                      lastSyncPending ? "animate-spin" : ""
                     }`}
-                  /> */}
-                  {/* {device.isSyncing ? "Syncing..." : "Sync Now"} */}
+                  />
+                  {lastSyncPending ? "Syncing..." : "Sync Now"}
+                </Button>
+                <Button
+                  onClick={() => deleteCGMDevice(device.id)}
+                  disabled={deletePending}
+                  variant="outline"
+                  className="cursor-pointer h-12 rounded-lg border-2 border-black font-bold"
+                >
+                  {deletePending ? <FaSpinner className="mr-2 h-5 w-5"/> : <LinkIcon className="mr-2 h-5 w-5"/>}
+                  {deletePending ? "Deleting..." : "Delete"}
+                </Button>
+                <Button
+                  onClick={() => changeConnectionStatus({ 
+                    did: device.id,
+                    lastSyncAt: new Date().toISOString(),
+                    isConnected: !device.isConnected
+                  })}
+                  disabled={connectionChangePending}
+                  variant="outline"
+                  className="cursor-pointer h-12 rounded-lg border-2 border-black font-bold"
+                >
+                  {connectionChangePending ? <FaSpinner className="mr-2 h-5 w-5"/> : <LinkIcon className="mr-2 h-5 w-5"/>}
+                  {connectionChangePending ? "Connecting..." : (device.isConnected ? "Disconnect" : "Connect")}
                 </Button>
               </CardFooter>
             </Card>))
