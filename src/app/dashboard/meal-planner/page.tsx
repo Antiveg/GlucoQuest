@@ -201,9 +201,9 @@ export default function MealPlannerPage() {
                   {["Breakfast", "Lunch", "Dinner", "Snack"].map((title) => (
                     <button
                       key={title}
-                      onClick={() => setMealTitle(title.toLowerCase())}
+                      onClick={() => setMealTitle(title)}
                       className={`w-full h-12 font-bold text-md rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all flex items-center justify-center ${
-                        mealTitle === title.toLowerCase()
+                        mealTitle === title
                           ? "bg-[#4741A6] text-white"
                           : "bg-white text-black hover:bg-gray-100"
                       }`}

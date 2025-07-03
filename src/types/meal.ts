@@ -1,21 +1,21 @@
 interface Food {
   id: number;
-  meal_id: number;
+  mealId: number;
   name: string;
   grams: number;
   carbs: number;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface MealWithFood {
   id: number;
-  user_id: number;
+  userId: number;
   name: string;
   time: string;
-  photo_url: string;
-  total_carbs: number;
-  insulin_dose: number;
+  photoUrl: string;
+  totalCarbs: number;
+  insulinDose: number;
   notes: string;
-  created_at: string;
+  createdAt: string;
   foods: Food[];
 }

@@ -16,137 +16,142 @@ import {
 } from "lucide-react";
 import { format, addDays, subDays } from "date-fns";
 import { MealWithFood } from "@/types/meal";
+import { useUserMealsWithFoodsByUserId } from "@/lib/client-queries/meals-with-foods";
+import Loading from "@/components/loading";
+import ErrorBox from "@/components/error-box";
 
 // --- MOCK DATA ---
-const MOCK_LOGGED_MEALS: MealWithFood[] = [
-  {
-    id: 1,
-    user_id: 101,
-    name: "Breakfast",
-    time: "2025-06-27T08:15:00Z",
-    photo_url: "https://placehold.co/600x400/9BBBFC/000000?text=Oatmeal",
-    foods: [
-      {
-        id: 11,
-        meal_id: 1,
-        name: "Oatmeal, 1 cup",
-        grams: 240,
-        carbs: 45,
-        created_at: "2025-06-27T07:00:00Z",
-      },
-      {
-        id: 12,
-        meal_id: 1,
-        name: "Banana, medium",
-        grams: 118,
-        carbs: 27,
-        created_at: "2025-06-27T07:00:00Z",
-      },
-      {
-        id: 13,
-        meal_id: 1,
-        name: "Milk, 1/2 cup",
-        grams: 122,
-        carbs: 6,
-        created_at: "2025-06-27T07:00:00Z",
-      },
-    ],
-    total_carbs: 78,
-    insulin_dose: 7.8,
-    notes:
-      "A bit sweet today, maybe less banana next time. Felt energetic afterwards.",
-    created_at: "2025-06-27T08:20:00Z",
-  },
-  {
-    id: 2,
-    user_id: 101,
-    name: "Lunch",
-    time: "2025-06-27T12:45:00Z",
-    photo_url: "https://placehold.co/600x400/D9EFF7/000000?text=Chicken+Salad",
-    foods: [
-      {
-        id: 21,
-        meal_id: 2,
-        name: "Grilled Chicken, 150g",
-        grams: 150,
-        carbs: 0,
-        created_at: "2025-06-27T11:00:00Z",
-      },
-      {
-        id: 22,
-        meal_id: 2,
-        name: "Mixed Greens Salad",
-        grams: 100,
-        carbs: 5,
-        created_at: "2025-06-27T11:00:00Z",
-      },
-      {
-        id: 23,
-        meal_id: 2,
-        name: "Vinaigrette Dressing",
-        grams: 30,
-        carbs: 3,
-        created_at: "2025-06-27T11:00:00Z",
-      },
-      {
-        id: 24,
-        meal_id: 2,
-        name: "Apple, small",
-        grams: 150,
-        carbs: 20,
-        created_at: "2025-06-27T11:00:00Z",
-      },
-    ],
-    total_carbs: 28,
-    insulin_dose: 3.0,
-    notes: "Light and refreshing lunch. BG was stable.",
-    created_at: "2025-06-27T12:50:00Z",
-  },
-  {
-    id: 3,
-    user_id: 101,
-    name: "Dinner",
-    time: "2025-06-27T18:30:00Z",
-    photo_url: "https://placehold.co/600x400/D9EFF7/000000?text=Chicken+Salad",
-    foods: [
-      {
-        id: 31,
-        meal_id: 3,
-        name: "Salmon Fillet, 120g",
-        grams: 120,
-        carbs: 0,
-        created_at: "2025-06-27T17:00:00Z",
-      },
-      {
-        id: 32,
-        meal_id: 3,
-        name: "Quinoa, 1 cup",
-        grams: 185,
-        carbs: 39,
-        created_at: "2025-06-27T17:00:00Z",
-      },
-      {
-        id: 33,
-        meal_id: 3,
-        name: "Steamed Broccoli",
-        grams: 91,
-        carbs: 10,
-        created_at: "2025-06-27T17:00:00Z",
-      },
-    ],
-    total_carbs: 49,
-    insulin_dose: 5.2,
-    notes: "",
-    created_at: "2025-06-27T18:35:00Z",
-  },
-];
+// const MOCK_LOGGED_MEALS: MealWithFood[] = [
+//   {
+//     id: 1,
+//     user_id: 101,
+//     name: "Breakfast",
+//     time: "2025-06-27T08:15:00Z",
+//     photoUrl: "https://placehold.co/600x400/9BBBFC/000000?text=Oatmeal",
+//     foods: [
+//       {
+//         id: 11,
+//         meal_id: 1,
+//         name: "Oatmeal, 1 cup",
+//         grams: 240,
+//         carbs: 45,
+//         created_at: "2025-06-27T07:00:00Z",
+//       },
+//       {
+//         id: 12,
+//         meal_id: 1,
+//         name: "Banana, medium",
+//         grams: 118,
+//         carbs: 27,
+//         created_at: "2025-06-27T07:00:00Z",
+//       },
+//       {
+//         id: 13,
+//         meal_id: 1,
+//         name: "Milk, 1/2 cup",
+//         grams: 122,
+//         carbs: 6,
+//         created_at: "2025-06-27T07:00:00Z",
+//       },
+//     ],
+//     totalCarbs: 78,
+//     insulinDose: 7.8,
+//     notes:
+//       "A bit sweet today, maybe less banana next time. Felt energetic afterwards.",
+//     created_at: "2025-06-27T08:20:00Z",
+//   },
+//   {
+//     id: 2,
+//     user_id: 101,
+//     name: "Lunch",
+//     time: "2025-06-27T12:45:00Z",
+//     photoUrl: "https://placehold.co/600x400/D9EFF7/000000?text=Chicken+Salad",
+//     foods: [
+//       {
+//         id: 21,
+//         meal_id: 2,
+//         name: "Grilled Chicken, 150g",
+//         grams: 150,
+//         carbs: 0,
+//         created_at: "2025-06-27T11:00:00Z",
+//       },
+//       {
+//         id: 22,
+//         meal_id: 2,
+//         name: "Mixed Greens Salad",
+//         grams: 100,
+//         carbs: 5,
+//         created_at: "2025-06-27T11:00:00Z",
+//       },
+//       {
+//         id: 23,
+//         meal_id: 2,
+//         name: "Vinaigrette Dressing",
+//         grams: 30,
+//         carbs: 3,
+//         created_at: "2025-06-27T11:00:00Z",
+//       },
+//       {
+//         id: 24,
+//         meal_id: 2,
+//         name: "Apple, small",
+//         grams: 150,
+//         carbs: 20,
+//         created_at: "2025-06-27T11:00:00Z",
+//       },
+//     ],
+//     totalCarbs: 28,
+//     insulinDose: 3.0,
+//     notes: "Light and refreshing lunch. BG was stable.",
+//     created_at: "2025-06-27T12:50:00Z",
+//   },
+//   {
+//     id: 3,
+//     user_id: 101,
+//     name: "Dinner",
+//     time: "2025-06-27T18:30:00Z",
+//     photoUrl: "https://placehold.co/600x400/D9EFF7/000000?text=Chicken+Salad",
+//     foods: [
+//       {
+//         id: 31,
+//         meal_id: 3,
+//         name: "Salmon Fillet, 120g",
+//         grams: 120,
+//         carbs: 0,
+//         created_at: "2025-06-27T17:00:00Z",
+//       },
+//       {
+//         id: 32,
+//         meal_id: 3,
+//         name: "Quinoa, 1 cup",
+//         grams: 185,
+//         carbs: 39,
+//         created_at: "2025-06-27T17:00:00Z",
+//       },
+//       {
+//         id: 33,
+//         meal_id: 3,
+//         name: "Steamed Broccoli",
+//         grams: 91,
+//         carbs: 10,
+//         created_at: "2025-06-27T17:00:00Z",
+//       },
+//     ],
+//     totalCarbs: 49,
+//     insulinDose: 5.2,
+//     notes: "",
+//     created_at: "2025-06-27T18:35:00Z",
+//   },
+// ];
 
 export default function DailyMealLogPage() {
-  const [meals, setMeals] = useState<MealWithFood[]>(MOCK_LOGGED_MEALS);
+  // const [meals, setMeals] = useState<MealWithFood[]>(MOCK_LOGGED_MEALS);
 
-  const [currentDate, setCurrentDate] = useState(
-    new Date("2025-06-13T12:00:00Z")
-  );
+  const [currentDate, setCurrentDate] = useState(new Date(Date.UTC(2025, 5, 13, 0, 0, 0)));
+  const { data: meals, isLoading : MealsWithFoodsLoading, isError, error } = useUserMealsWithFoodsByUserId(currentDate.toISOString())
+
+  if(MealsWithFoodsLoading) return <Loading message="Loading User Meals with Foods..."/>
+  if(isError) return <ErrorBox error={error}/>
 
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
@@ -174,7 +179,7 @@ export default function DailyMealLogPage() {
               </Button>
             </div>
           </div>
-          <a href="/dashboard/planner">
+          <a href="/dashboard/meal-planner">
             <Button className="w-full md:w-auto bg-[#4741A6] text-white font-bold text-md h-12 rounded-lg border-2 border-black shadow-[4px_4px_0px_#000] hover:bg-[#3b368a] active:shadow-none active:translate-x-1 active:translate-y-1 transition-all">
               <Plus className="mr-2 h-5 w-5" /> Log New Meal
             </Button>
@@ -182,7 +187,7 @@ export default function DailyMealLogPage() {
         </header>
 
         <div className="space-y-8">
-          {meals.length > 0 ? (
+          {meals && meals.length > 0 ? (
             meals.map((meal) => <MealLogCard key={meal.id} meal={meal} />)
           ) : (
             <Card className="bg-white rounded-2xl border-2 border-black shadow-[8px_8px_0px_#000] p-8 text-center">
@@ -197,41 +202,21 @@ export default function DailyMealLogPage() {
   );
 }
 
-interface FoodItem {
-  name: string;
-  carbs: number;
-}
-
-interface MealItem {
-  id: number;
-  name: string;
-  time: string;
-  photo_url: string | null;
-  foods: FoodItem[];
-  total_carbs: number;
-  insulin_dose: number;
-  notes: string;
-}
-
-interface MealLogCardProps {
-  meal: MealItem;
-}
-
-const MealLogCard: React.FC<MealLogCardProps> = ({ meal }) => {
+const MealLogCard = ({meal} : {meal : MealWithFood}) => {
   return (
     <Card className="bg-white rounded-2xl border-2 border-black shadow-[8px_8px_0px_#000] overflow-hidden">
       <CardHeader className="bg-[#D9EFF7] p-4 border-b-2 border-black">
         <CardTitle className="text-2xl font-bold text-black flex justify-between items-center">
           <span>{meal.name}</span>
-          <span className="text-lg font-medium text-gray-700">{meal.time}</span>
+          <span className="text-lg font-medium text-gray-700">{format(meal.time, "dd/MM/yyyy HH:mm")}</span>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0 md:p-6 grid grid-cols-1 md:grid-cols-5 gap-6">
         {/* Meal Photo */}
         <div className="md:col-span-2 md:p-0 p-6 pb-0">
-          {meal.photo_url ? (
+          {meal.photoUrl ? (
             <img
-              src={meal.photo_url}
+              src={meal.photoUrl}
               alt={`Photo of ${meal.name}`}
               className="w-full h-64 object-cover rounded-xl border-2 border-black"
               onError={(e) => {
@@ -270,14 +255,14 @@ const MealLogCard: React.FC<MealLogCardProps> = ({ meal }) => {
                 <Droplet size={14} />
                 Carbs
               </p>
-              <p className="font-extrabold text-2xl">{meal.total_carbs}g</p>
+              <p className="font-extrabold text-2xl">{meal.totalCarbs}g</p>
             </div>
             <div className="bg-purple-100 p-3 rounded-xl border-2 border-black">
               <p className="font-bold text-sm text-purple-900 flex items-center gap-1">
                 <Syringe size={14} />
                 Insulin
               </p>
-              <p className="font-extrabold text-2xl">{meal.insulin_dose}u</p>
+              <p className="font-extrabold text-2xl">{meal.insulinDose}u</p>
             </div>
           </div>
 

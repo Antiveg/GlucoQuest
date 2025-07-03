@@ -21,23 +21,23 @@ export interface GlucoseReading extends GlucoseReadingInput {
 
 export interface Meal {
   id: number;
-  user_id: number;
+  userId: number;
   name: string; // meal name, optional
   time: string;
-  photo_url: string;
-  total_carbs: number; // total carbs in grams
-  insulin_dose: number; // insulin units for the meal
+  photoUrl: string;
+  totalCarbs: number; // total carbs in grams
+  insulinDose: number; // insulin units for the meal
   notes?: string;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface Food {
   id: number;
-  meal_id: number;
+  mealId: number;
   name: string;
   grams: number;
   carbs: number;
-  created_at: string;
+  createdAt: string;
 }
 
 export interface Task {

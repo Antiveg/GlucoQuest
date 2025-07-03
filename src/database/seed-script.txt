@@ -29,3 +29,22 @@ INSERT INTO "CgmDevice" ("deviceName", "deviceId", "isConnected", "lastSyncAt", 
 VALUES 
 ('Dexcom G7', 'A4B8-C7D6-E5F4', true, NOW(), 1),
 ('Freestyle Libre 3', 'F1E2-D3C4-B5A6', false, NOW(), 1);
+
+INSERT INTO "Meal" ("userId", "name", "time", "photoUrl", "totalCarbs", "insulinDose", "notes", "createdAt")
+VALUES 
+(1, 'Breakfast', '2025-06-13T01:15:00Z', 'https://placehold.co/600x400/9BBBFC/000000?text=Oatmeal', 78, 7.8, 'A bit sweet today, maybe less banana next time. Felt energetic afterwards.', '2025-06-13T01:20:00Z'),
+(1, 'Lunch', '2025-06-13T05:45:00Z', 'https://placehold.co/600x400/D9EFF7/000000?text=Chicken+Salad', 28, 3.0, 'Light and refreshing lunch. BG was stable.', '2025-06-13T05:50:00Z'),
+(1, 'Dinner', '2025-06-13T11:30:00Z', 'https://placehold.co/600x400/D9EFF7/000000?text=Chicken+Salad', 49, 5.2, '', '2025-06-13T11:35:00Z')
+
+INSERT INTO "Food" ("mealId", "name", "grams", "carbs", "createdAt")
+VALUES
+(1, 'Oatmeal, 1 cup', 240, 45, '2025-06-13T00:00:00Z'),
+(1, 'Banana, medium', 118, 27, '2025-06-13T00:00:00Z'),
+(1, 'Milk, 1/2 cup', 122, 6, '2025-06-13T00:00:00Z'),
+(2, 'Grilled Chicken, 150g', 150, 0, '2025-06-13T04:00:00Z'),
+(2, 'Mixed Greens Salad', 100, 5, '2025-06-13T04:00:00Z'),
+(2, 'Vinaigrette Dressing', 30, 3, '2025-06-13T04:00:00Z'),
+(2, 'Apple, small', 150, 20, '2025-06-13T04:00:00Z'),
+(3, 'Salmon Fillet, 120g', 120, 0, '2025-06-13T10:00:00Z'),
+(3, 'Quinoa, 1 cup', 185, 39, '2025-06-13T10:00:00Z'),
+(3, 'Steamed Broccoli', 91, 10, '2025-06-13T10:00:00Z')

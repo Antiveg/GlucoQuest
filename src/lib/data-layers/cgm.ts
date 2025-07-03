@@ -4,6 +4,7 @@ import prisma from "../config/prisma";
 export const getCGMDeviceByUserIdQuery = async (userId : number) => {
     const temp = await prisma.cgmDevice.findMany({
         where: { userId: userId },
+        orderBy: { isConnected: 'desc' }
     })
     return temp
 }
