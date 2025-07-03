@@ -28,6 +28,7 @@ model User {
   tasks          Task[]
   cgmDevices     CgmDevice[]
   notifications  Notification[]
+  foods          Food[]
 }
 
 model GlucoseReading {
@@ -54,18 +55,30 @@ model Meal {
   createdAt   DateTime  @default(now()) 
 
   user        User      @relation(fields: [userId], references: [id])
-  foods       Food[]
+  mealFoods   MealFoods[]
+}
+
+model MealFoods {
+  id          Int       @id @default(autoincrement()) 
+  mealId      Int
+  foodId      Int
+  servings    Int      @default(1)
+
+  meal       Meal      @relation(fields: [mealId], references: [id])
+  food       Food      @relation(fields: [foodId], references: [id])
 }
 
 model Food {
   id          Int       @id @default(autoincrement()) 
-  mealId      Int       
+  userId      Int     
   name        String    
   grams       Int       
   carbs       Int       
   createdAt   DateTime  @default(now()) 
+  isArchived  Boolean   @default(false)
 
-  meal        Meal      @relation(fields: [mealId], references: [id])
+  user        User      @relation(fields: [userId], references: [id])
+  mealFoods   MealFoods[]
 }
 
 model Task {

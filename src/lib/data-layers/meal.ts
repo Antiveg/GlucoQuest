@@ -11,7 +11,13 @@ export const getUserMealsWithFoodsByUserIdQuery = async (userId : number, date :
                 lt: endOfDayUTC,
             }
         },
-        include: { foods: true },
+        include: {
+            mealFoods: {
+                include: {
+                food: true
+                }
+            }
+        },
         orderBy: { createdAt: "asc" },
     });
     return mealsWithFoods

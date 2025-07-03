@@ -1,10 +1,16 @@
-interface Food {
+export interface Food extends FoodInput {
   id: number;
-  mealId: number;
-  name: string;
-  grams: number;
-  carbs: number;
-  createdAt: string;
+}
+
+export interface FoodInput {
+  name: string
+  grams: number
+  carbs: number
+  createdAt: string
+}
+
+export interface FoodWithServing extends Food {
+  servings: number
 }
 
 export interface MealWithFood {
@@ -17,5 +23,5 @@ export interface MealWithFood {
   insulinDose: number;
   notes: string;
   createdAt: string;
-  foods: Food[];
+  foods: FoodWithServing[];
 }

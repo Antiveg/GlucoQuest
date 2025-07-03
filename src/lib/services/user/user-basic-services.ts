@@ -1,6 +1,5 @@
 import { Prisma } from "@/database/prisma-client";
 import { protectApiRoute } from "@/lib/auth/protect-api";
-import { queryGlucoseReadingsByUserId } from "@/lib/data-layers/glucose-readings";
 import { queryCreateUser, queryUsers } from "@/lib/data-layers/users";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";

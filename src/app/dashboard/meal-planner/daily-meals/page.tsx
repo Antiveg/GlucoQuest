@@ -243,7 +243,7 @@ const MealLogCard = ({meal} : {meal : MealWithFood}) => {
             <ul className="list-disc list-inside bg-gray-50 p-3 rounded-lg border border-gray-200">
               {meal.foods.map((food, index) => (
                 <li key={index} className="text-gray-800">
-                  {food.name}
+                  {food.servings}x {food.name}
                 </li>
               ))}
             </ul>

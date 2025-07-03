@@ -7,20 +7,18 @@ export async function getUserMealsWithFoodsByUserIdService(uid : string, date : 
 
         const MealsWithFoods = await getUserMealsWithFoodsByUserIdQuery(userId, new Date(date), timezoneOffsetMinutes);
         if (!MealsWithFoods) throw new Error("Failed to query user's glucose reading to database ...");
-        const formattedMealsWithFoods = MealsWithFoods.map((meal) => {
-            const foods = meal.foods.map((food) => ({
-                ...food,
-                createdAt: food.createdAt.toISOString()
-            }))
-            return {
-                ...meal,
-                time: meal.time.toISOString(),
-                createdAt: meal.createdAt.toISOString(),
-                foods: foods
-            }
-        })
-        // console.log(formattedMealsWithFoods)
-        return formattedMealsWithFoods;
+        const flattenedMeals = MealsWithFoods.map((meal) => ({
+            ...meal,
+            createdAt: meal.createdAt.toISOString(),
+            time: meal.time.toISOString(),
+            foods: meal.mealFoods.map((mf) => ({
+                ...mf.food,
+                createdAt: mf.food.createdAt.toISOString(),
+                servings: mf.servings,
+            })),
+        }));
+        console.log(flattenedMeals);
+        return flattenedMeals
     } catch (error: unknown) {
         if(error instanceof Error){
             console.error(error);

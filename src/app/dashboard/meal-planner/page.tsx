@@ -28,31 +28,34 @@ import {
   Bell,
   Calendar,
   ClipboardList,
+  Plus,
+  ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
+import { useCreateUserFood, useDeleteUserFood, useGetUserFoods } from "@/lib/client-queries/foods";
+import Loading from "@/components/loading";
+import ErrorBox from "@/components/error-box";
+import { Food } from "@/types/meal";
 
-const MOCK_FOOD_DB = [
-  { id: 1, name: "Apple, medium", carbs: 25, servings: 1 },
-  { id: 2, name: "Banana, medium", carbs: 27, servings: 1 },
-  { id: 3, name: "Bread, 1 slice", carbs: 15, servings: 1 },
-  { id: 4, name: "Rice, white, 1 cup cooked", carbs: 45, servings: 1 },
-  { id: 5, name: "Chicken Breast, 100g", carbs: 0, servings: 1 },
-  { id: 6, name: "Milk, 1 cup", carbs: 12, servings: 1 },
-  { id: 7, name: "Orange Juice, 1 cup", carbs: 26, servings: 1 },
-  { id: 8, name: "Potato, medium", carbs: 37, servings: 1 },
-  { id: 9, name: "Pasta, 1 cup cooked", carbs: 43, servings: 1 },
-  { id: 10, name: "Pizza, 1 slice", carbs: 36, servings: 1 },
-];
+// const MOCK_FOOD_DB = [
+//   { id: 1, name: "Apple, medium", carbs: 25, servings: 1 },
+//   { id: 2, name: "Banana, medium", carbs: 27, servings: 1 },
+//   { id: 3, name: "Bread, 1 slice", carbs: 15, servings: 1 },
+//   { id: 4, name: "Rice, white, 1 cup cooked", carbs: 45, servings: 1 },
+//   { id: 5, name: "Chicken Breast, 100g", carbs: 0, servings: 1 },
+//   { id: 6, name: "Milk, 1 cup", carbs: 12, servings: 1 },
+//   { id: 7, name: "Orange Juice, 1 cup", carbs: 26, servings: 1 },
+//   { id: 8, name: "Potato, medium", carbs: 37, servings: 1 },
+//   { id: 9, name: "Pasta, 1 cup cooked", carbs: 43, servings: 1 },
+//   { id: 10, name: "Pizza, 1 slice", carbs: 36, servings: 1 },
+// ];
 
 const TARGET_BG = 120; // mg/dL
 const CORRECTION_FACTOR = 50; // 1 unit of insulin lowers BG by 50 mg/dL
 const EAT_COUNTDOWN_MINUTES = 30;
 
-interface FoodItemOverview {
-  id: number;
-  name: string;
-  carbs: number;
+interface FoodItemOverview extends Food {
   servings: number;
 }
 
@@ -71,7 +74,29 @@ export default function MealPlannerPage() {
   const [elapsedTime, setElapsedTime] = useState(0);
   const [reminderSet, setReminderSet] = useState<number>(0);
 
+  const [newFoodName, setNewFoodName] = useState("");
+  const [newFoodCarbs, setNewFoodCarbs] = useState("");
+  const [newFoodGrams, setNewFoodGrams] = useState("");
+
   const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { mutate: mutateDeleteUserFood, isPending: deleteFoodPending } = useDeleteUserFood()
+  const { mutate: mutateCreateUserFood, isPending: createFoodPending } = useCreateUserFood()
+
+  const handleAddNewFood = () => {
+    if (!newFoodName || !newFoodCarbs || !newFoodGrams) return;
+    mutateCreateUserFood({
+      name: newFoodName,
+      grams: Number(newFoodGrams),
+      carbs: Number(newFoodCarbs),
+      createdAt: new Date().toISOString()
+    })
+    setNewFoodName("");
+    setNewFoodCarbs("");
+    setNewFoodGrams("");
+  };
+
+  const { data: foods, isLoading: foodsLoading, isError: foodsIsError, error: foodsError} = useGetUserFoods()
 
   // Derived State & Calculations
   const totalCarbs = useMemo(
@@ -93,7 +118,11 @@ export default function MealPlannerPage() {
     };
   }, [totalCarbs, currentBg, icr]);
 
-  const addFoodToMeal = (food: FoodItemOverview) => {
+  const addFoodToMeal = (food: Food) => {
+    if (mealItems.some(item => item.id === food.id)){
+      setSearchTerm("")
+      return
+    };
     setMealItems((prev) => [...prev, { ...food, servings: 1 }]);
     setSearchTerm("");
   };
@@ -153,7 +182,7 @@ export default function MealPlannerPage() {
 
   const filteredFood = useMemo(() => {
     if (!searchTerm) return [];
-    return MOCK_FOOD_DB.filter((food) =>
+    return foods?.filter((food : Food) =>
       food.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm]);
@@ -163,6 +192,9 @@ export default function MealPlannerPage() {
     100
   );
   const timeToEat = EAT_COUNTDOWN_MINUTES * 60 - Math.floor(elapsedTime / 1000);
+  
+  if(foodsLoading) return <Loading message="Loading User Glucose Loading"/>
+  if(foodsIsError) return <ErrorBox error={foodsError}/>
 
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
@@ -259,26 +291,83 @@ export default function MealPlannerPage() {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="relative">
-                  <Input
-                    placeholder="Search for food..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="border-black h-12 pl-10"
-                    disabled={doseConfirmed}
-                  />
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  {filteredFood.length > 0 && (
+                  <div className="flex flex-col ">
+                    <div className="flex items-center gap-2 text-sm text-gray-600 font-semibold mb-2">
+                      <ArrowRight size={16} /> insert new food choice if needed
+                    </div>
+                    <div className="flex flex-row w-full items-center space-x-2 mb-4">
+                      <Input
+                        placeholder="Name"
+                        value={newFoodName}
+                        onChange={(e) => setNewFoodName(e.target.value)}
+                        className="border-black h-12"
+                        disabled={doseConfirmed}
+                      />
+                      <Input
+                        placeholder="Carbs (g)"
+                        type="number"
+                        value={newFoodCarbs}
+                        onChange={(e) => setNewFoodCarbs(e.target.value)}
+                        className="border-black h-12 w-48"
+                        disabled={doseConfirmed}
+                      />
+                      <Input
+                        placeholder="Grams (g)"
+                        type="number"
+                        value={newFoodGrams}
+                        onChange={(e) => setNewFoodGrams(e.target.value)}
+                        className="border-black h-12 w-48"
+                        disabled={doseConfirmed}
+                      />
+                      <Button
+                        variant="default"
+                        size="icon"
+                        className="h-12 w-12"
+                        onClick={() => handleAddNewFood()}
+                        disabled={createFoodPending}
+                      >
+                        <Plus size={20} />
+                      </Button>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 text-sm text-gray-600 font-semibold mb-2">
+                      <ArrowRight size={16} /> log you current meals here
+                    </div>
+                    <div className="relative">
+                      <Input
+                        placeholder="Search for food..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="border-black h-12 pl-10"
+                        disabled={doseConfirmed}
+                      />
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    </div>
+                  </div>
+                  {filteredFood && filteredFood.length > 0 && (
                     <div className="absolute z-10 w-full bg-white border-2 border-black rounded-lg mt-1 shadow-lg max-h-48 overflow-y-auto">
-                      {filteredFood.map((food) => (
+                      {filteredFood.map((food : Food) => (
                         <div
                           key={food.id}
                           onClick={() => addFoodToMeal(food)}
-                          className="p-3 hover:bg-gray-100 cursor-pointer border-b"
+                          className="flex flex-row items-center p-3 hover:bg-gray-100 cursor-pointer border-b"
                         >
                           {food.name}{" "}
-                          <span className="text-gray-500 text-sm">
-                            ({food.carbs}g carbs)
-                          </span>
+                          <span className="ml-2 text-gray-500 text-sm">({food.carbs}g carbs)</span>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500 ml-auto"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              mutateDeleteUserFood(food.id)
+                              setSearchTerm("")
+                            }}
+                            disabled={deleteFoodPending}
+                          >
+                            <Trash2 size={16} />
+                          </Button>
                         </div>
                       ))}
                     </div>
@@ -291,9 +380,8 @@ export default function MealPlannerPage() {
                         key={item.id}
                         className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg border"
                       >
-                        <span className="flex-grow font-semibold">
-                          {item.name}
-                        </span>
+                        <span className="flex-grow font-semibold">{item.name}</span>
+                        <span className="text-gray-500 text-sm">({item.carbs}g carbs)</span>
                         <Input
                           type="number"
                           value={item.servings}
