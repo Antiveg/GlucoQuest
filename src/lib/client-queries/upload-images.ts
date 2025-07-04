@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 // upload images
 async function uploadImages(files: File[], context: string): Promise<{ urls: string[] }> {
@@ -9,7 +10,7 @@ async function uploadImages(files: File[], context: string): Promise<{ urls: str
         method: "POST",
         body: formData,
     });
-    if (!res.ok) throw new Error("Failed to upload images");
+    if (!res.ok) throw new Error("Failed to upload image(s)");
     return res.json();
 }
 
@@ -17,10 +18,10 @@ export function useUploadImages() {
   return useMutation({
     mutationFn: ({ files, context } : {files: File[], context: string}) => uploadImages(files, context),
     onSuccess: (data) => {
-      console.log("Upload success:", data.urls);
+      toast.success(`${data.urls.length} image(s) uploaded successfully!`)
     },
     onError: (error) => {
-      console.error("Upload failed:", error);
+      toast.success(error.message)
     },
   });
 }

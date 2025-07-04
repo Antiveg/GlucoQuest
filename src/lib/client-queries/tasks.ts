@@ -32,33 +32,28 @@ async function updateTaskCompletionStatus({ taskId, toggle } : { taskId: number,
   return res.json();
 }
 
-export function useUpdateTaskCompletionStatus(date : string) {
+export function useUpdateTaskCompletionStatus(date: string) {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateTaskCompletionStatus,
     onMutate: async ({ taskId, toggle }) => {
       await queryClient.cancelQueries({ queryKey: ["user-daily-tasks", date] });
       const previousTasks = queryClient.getQueryData<Task[]>(["user-daily-tasks", date]);
-      queryClient.setQueryData(
-        ["user-daily-tasks", date],
+      queryClient.setQueryData(["user-daily-tasks", date],
         previousTasks?.map((task) => task.id === taskId ? { ...task, done: toggle } : task)
       );
       return { previousTasks };
     },
     onSuccess: (updatedTask) => {
-      queryClient.setQueryData(["user-daily-tasks", date], (oldData: Task[] | undefined) => {
-        return oldData?.map((task) => task.id === updatedTask.id ? { ...task, done: updatedTask.done } : task);
-      });
-      toast.success(`Task marked as ${updatedTask.done ? "completed" : "incomplete"}.`)
+      queryClient.setQueryData(["user-daily-tasks", date], (oldData: Task[] | undefined) =>
+        oldData?.map((task) => task.id === updatedTask.id ? { ...task, done: updatedTask.done } : task)
+      );
+      toast.success(`Task marked as ${updatedTask.done ? "completed" : "incomplete"}.`);
     },
     onError: (error, variables, context) => {
       queryClient.setQueryData(["user-daily-tasks", date], context?.previousTasks);
-      toast.error("Failed to update task status. Please try again.");
-
-      if(process.env.NODE_ENV === "development") console.log(`${error.message}${variables.toggle}`)
-    },
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-daily-tasks", date] });
+      toast.error(error.message);
+      if (process.env.NODE_ENV === "development") console.log(`${error.message}${variables.toggle}`);
     },
   });
 }
@@ -69,7 +64,7 @@ async function deleteTaskById(taskId : number) {
     method: "DELETE",
     headers: { "Content-Type": "application/json" }
   });
-  if (!res.ok) throw new Error("Failed to update task completion status");
+  if (!res.ok) throw new Error("Failed to delete the intended task");
   return res.json();
 }
 
@@ -111,7 +106,11 @@ export function useCreateUserTask(date : string) {
     mutationFn: createUserTask,
     onSuccess: (createdTask) => {
       queryClient.invalidateQueries({ queryKey: ["user-daily-tasks", date] });
-      toast.success(`Task "${createdTask.title}" created successfully!`);
+      const truncatedTaskName =
+        createdTask.task.length > 23
+          ? createdTask.task.slice(0, 20) + "..."
+          : createdTask.task;
+      toast.success(`Task "${truncatedTaskName}" created successfully!`);
     },
     onError: (error) => {
       toast.error(error.message)

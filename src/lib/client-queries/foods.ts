@@ -1,6 +1,7 @@
 import { Food } from "@/types";
 import { FoodInput } from "@/types/meal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 // get user's foods information
 async function getUserFoods() {
@@ -31,11 +32,12 @@ export function useDeleteUserFood() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: deleteUserFood,
-    onSuccess: () => {
+    onSuccess: (deletedFood) => {
       queryClient.invalidateQueries({ queryKey: ["user-foods"] });
+      toast.success(`Food "${deletedFood.name}" successfully deleted!`)
     },
     onError: (error) => {
-      console.error("Error deleting user food:", error);
+      toast.error(error.message)
     },
   });
 }
@@ -55,11 +57,15 @@ export function useCreateUserFood() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createUserFood,
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["user-foods"] });
+    onSuccess: (createdFood) => {
+      queryClient.setQueryData<Food[]>(["user-foods"], (oldFoods) => {
+        if (!oldFoods) return [createdFood];
+        return [...oldFoods, createdFood];
+      });
+      toast.success(`Food "${createdFood.name}" successfully created!`)
     },
     onError: (error) => {
-      console.error("Error creating user food:", error);
+      toast.error(error.message)
     },
   });
 }

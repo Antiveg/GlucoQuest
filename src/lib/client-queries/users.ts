@@ -1,5 +1,6 @@
 import { Prisma } from "@/database/prisma-client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 // get all users query
 async function fetchUsers() {
@@ -22,7 +23,7 @@ async function createUser(user : Prisma.UserCreateInput) {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(user),
   });
-  if (!res.ok) throw new Error("Failed to create user");
+  if (!res.ok) throw new Error("Failed to create new user");
   return res.json();
 }
 
@@ -33,9 +34,10 @@ export function useCreateUser() {
     mutationFn: createUser,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
+      toast.success("New user successfully created!")
     },
     onError: (error) => {
-      console.error("Failed to create user:", error);
+      toast.error(error.message)
     },
   });
 }
@@ -67,15 +69,15 @@ async function updateUser(user: Prisma.UserUpdateInput) {
 
 export function useUpdateUser() {
   const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: updateUser,
-    onSuccess: () => {
+    onSuccess: (updatedUser) => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       queryClient.invalidateQueries({ queryKey: ["user"] });
+      toast.success(`User #${updatedUser.id} successfully updated!`)
     },
     onError: (error) => {
-      console.error("Failed to update user:", error);
+      toast.error(error.message)
     },
   });
 }

@@ -625,8 +625,9 @@ export default function MealPlannerPage() {
                           size="icon"
                           className="h-8 bg-green-500 flex-1"
                           onClick={() => {
-                            mutateUpdateUser(updatedUserInfo)
-                            setIsEditingUserInfo(false);
+                            mutateUpdateUser(updatedUserInfo, {
+                              onSuccess: () => { setIsEditingUserInfo(false) }
+                            });
                           }}
                           disabled={updateUserPending}
                         >

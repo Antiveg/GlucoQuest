@@ -1,8 +1,5 @@
 "use client"
 import React from 'react';
-import { useRouter } from 'next/navigation';
-import { ChevronLeft } from 'lucide-react';
-import { Button } from './ui/button';
 import Link from 'next/link';
 
 interface ErrorProps {
@@ -10,7 +7,6 @@ interface ErrorProps {
 }
 
 const ErrorBox = ({ error }: ErrorProps) => {
-  const router = useRouter();
 
   const status = typeof error === 'string' ? undefined : error.status;
   const message = typeof error === 'string' ? error : error.message;

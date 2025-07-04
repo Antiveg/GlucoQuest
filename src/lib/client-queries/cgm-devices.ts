@@ -1,5 +1,6 @@
 import { CgmDevice, CgmDeviceInput } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 // get user cgm devices by userid
 async function fetchCGMDevicesByUserId() {
@@ -35,9 +36,10 @@ export function useCreateCGMDevice() {
         const currentDevices = queryClient.getQueryData<CgmDevice[]>(cacheKey) || [];
         const updatedDevices = [newDevice, ...currentDevices];
         queryClient.setQueryData<CgmDevice[]>(cacheKey, updatedDevices);
+        toast.success(`Device ${newDevice.deviceId} created and connected`)
     },
     onError: (error) => {
-        console.error("Error creating new cgm devices:", error);
+        toast.error(error.message)
     },
   });
 }
@@ -60,16 +62,24 @@ export function useUpdateCGMDeviceConnectionStatus() {
     onSuccess: (updatedDevice) => {
       const cacheKey = ["user-cgm-devices"];
       queryClient.setQueryData<CgmDevice[]>(cacheKey, (currentDevices) => {
-        if (!currentDevices) return [updatedDevice]
-        return currentDevices.map((device) => ({
-          ...device,
-          isConnected: (device.id === updatedDevice.id) ? (updatedDevice.isConnected) : false,
-          lastSyncAt: (device.id === updatedDevice.id) ? updatedDevice.lastSyncAt : device.lastSyncAt
-        }));
+        if (!currentDevices) {
+          toast.success(`Device ${updatedDevice.deviceId} ${updatedDevice.isConnected ? "connected" : "disconnected"}.`);
+          return [updatedDevice];
+        }
+        return currentDevices.map((device) => {
+          if (device.id === updatedDevice.id) {
+            toast.success(`Device ${updatedDevice.deviceId} ${updatedDevice.isConnected ? "connected" : "disconnected"}.`)
+          }
+          return {
+            ...device,
+            isConnected: (device.id === updatedDevice.id) ? (updatedDevice.isConnected) : false,
+            lastSyncAt: (device.id === updatedDevice.id) ? updatedDevice.lastSyncAt : device.lastSyncAt
+          }
+        });
       });
     },
     onError: (error) => {
-      console.error("Error updating CGM device connection status:", error);
+      toast.error(error.message)
     },
   });
 }
@@ -81,7 +91,6 @@ async function syncCGMDevice({ did, lastSyncAt, isConnected }: { did: number; la
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ did, lastSyncAt, isConnected }),
   });
-
   if (!res.ok) throw new Error("Failed to sync CGM device");
   return res.json();
 }
@@ -99,9 +108,10 @@ export function useSyncCGMDevice() {
           lastSyncAt: (device.id === syncedDevice.id ? syncedDevice.lastSyncAt : device.lastSyncAt),
         }));
       });
+      toast.success(`Device ${syncedDevice.deviceId} synced now!`)
     },
     onError: (error) => {
-      console.error("Error syncing CGM device:", error);
+      toast.error(error.message)
     },
   });
 }
@@ -127,9 +137,10 @@ export function useDeleteCGMDevice() {
         if (!currentDevices) return [];
         return currentDevices.filter((device) => device.id !== deletedDevice.id);
       });
+      toast.success(`Device ${deletedDevice.deviceId} successfully deleted!`)
     },
     onError: (error) => {
-      console.error("Error deleting CGM device:", error);
+      toast.error(error.message)
     },
   });
 }
