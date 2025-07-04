@@ -1,5 +1,5 @@
 import { GlucoseReading } from "@/database/prisma-client";
-import { deleteGlucoseReadingByIdQuery, getGlucoseReadingsByUserIdQuery , createGlucoseReadingQuery } from "@/lib/data-layers/glucose-readings";
+import { deleteGlucoseReadingByIdQuery, getGlucoseReadingsByUserIdQuery , createGlucoseReadingQuery, getMostRecentGlucoseReadingByUserIdQuery } from "@/lib/data-layers/glucose-readings";
 
 export async function getGlucoseReadingsByUserIdService(uid : string, date : string, timezoneOffsetMinutes : number){
     try {
@@ -64,4 +64,33 @@ export async function createGlucoseReadingService(reading: GlucoseReading) {
         console.error(error);
         throw new Error("Internal Server Error");
     }
+}
+
+export async function getMostRecentGlucoseReadingByUserIdService(
+  uid: string,
+) {
+  try {
+    const userId = Number(uid);
+    if (isNaN(userId)) throw new Error("Invalid user id queried.");
+
+    const glucoseReading = await getMostRecentGlucoseReadingByUserIdQuery(
+      userId
+    );
+    if (!glucoseReading)
+      throw new Error("Failed to query user's glucose reading to database ...");
+    const formattedReading = {
+      ...glucoseReading,
+      time: glucoseReading.time.toISOString(),
+      createdAt: glucoseReading.createdAt.toISOString(),
+    };
+    // console.log(formattedReadings)
+    return formattedReading;
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      console.error(error);
+      throw new Error(error.message);
+    }
+    console.error(error);
+    throw new Error("Internal Server Error");
+  }
 }

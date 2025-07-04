@@ -39,3 +39,16 @@ export function useCreateMealWithFoods() {
     },
   });
 }
+
+async function fetchTotalCarbsByUserId() {
+  const res = await fetch(`/api/user/meals/total-carbs`);
+  if (!res.ok) throw new Error("Failed to fetch user meals with foods");
+  return res.json();
+}
+
+export function useFetchTotalCarbsByUserId() {
+  return useQuery<number, Error>({
+    queryKey: ["user-total-carbs"],
+    queryFn: () => fetchTotalCarbsByUserId(),
+  });
+}

@@ -1,5 +1,5 @@
 import { Prisma } from "@/database/prisma-client";
-import { createMealWithFoodsQuery, getUserMealsWithFoodsByUserIdQuery } from "@/lib/data-layers/meal";
+import { createMealWithFoodsQuery, getTotalCarbsByUserIdQuery, getUserMealsWithFoodsByUserIdQuery } from "@/lib/data-layers/meal";
 
 export async function getUserMealsWithFoodsByUserIdService(uid : string, date : string, timezoneOffsetMinutes : number){
     try {
@@ -52,6 +52,24 @@ export async function createMealWithFoodsService(uid : string, payload : CreateM
         };
         const createdMealWithFoods = await createMealWithFoodsQuery(input);
         return createdMealWithFoods
+    } catch (error: unknown) {
+        if(error instanceof Error){
+            console.error(error);
+            throw new Error(error.message);
+        }
+        console.error(error);
+        throw new Error("Internal Server Error");
+    }
+}
+
+export async function getTotalCarbsByUserIdService(uid : string){
+    try {
+        const userId = Number(uid)
+        if (isNaN(userId)) throw new Error("Invalid user id queried.");
+
+        const temp = await getTotalCarbsByUserIdQuery(userId);
+        if (!temp) throw new Error("Failed to query user's carbs");
+        return temp;
     } catch (error: unknown) {
         if(error instanceof Error){
             console.error(error);

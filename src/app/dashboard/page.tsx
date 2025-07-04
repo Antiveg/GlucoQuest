@@ -9,7 +9,6 @@ import {
   Swords,
   User,
   AlertTriangle,
-  ArrowUp,
   Calendar,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
@@ -18,15 +17,32 @@ import { ReminderCarousel } from "@/components/dashboard/ReminderCarousel";
 import Link from "next/link";
 import { useRecentNotificationsByUserId } from "@/lib/client-queries/notifications";
 import { formatDistanceToNow } from "date-fns";
+import { useMostRecentGlucoseReadingByUserId } from "@/lib/client-queries/glucose-readings";
+import { useFetchTotalCarbsByUserId } from "@/lib/client-queries/meals-with-foods";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
   const {
     data: notifications,
     isLoading: notificationsLoading,
-    isError,
-    error,
+    isError: notificationsIsError,
+    error: notificationsError,
   } = useRecentNotificationsByUserId();
+
+  const {
+    data: glucoseReading,
+    isLoading: glucoseReadingLoading,
+    isError: glucoseReadingIsError,
+    error: glucoseReadingError,
+  } = useMostRecentGlucoseReadingByUserId();
+
+  const {
+    data: totalCarbs,
+    isLoading: totalCarbsLoading,
+    isError: totalCarbsIsError,
+    error: totalCarbsError,
+  } = useFetchTotalCarbsByUserId();
+
   if (status === "loading")
     return <Loading message="Loading User Information ..." />;
 
@@ -65,22 +81,86 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <div className="grid grid-cols-2 md:grid-cols-2 gap-6">
-              <StatCard
+              <Card
+                className={`rounded-2xl border-2 border-black shadow-[8px_8px_0px_#000] overflow-hidden bg-[#9BBBFC]`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="font-bold text-gray-800">Glucose</p>
+                    <Droplets className="h-6 w-6 text-black" />
+                  </div>
+                  {glucoseReadingLoading ? (
+                    <p className="text-center text-gray-700 italic">
+                      Loading...
+                    </p>
+                  ) : glucoseReadingIsError ? (
+                    <p className="text-center text-gray-700 italic">
+                      Error: {glucoseReadingError.message}
+                    </p>
+                  ) : !glucoseReading ? (
+                    <p className="text-center text-gray-700 italic">
+                      No reading.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-4xl font-bold text-black">
+                        {glucoseReading.glucose}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-sm text-gray-700">mg/dL</p>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+              <Card
+                className={`rounded-2xl border-2 border-black shadow-[8px_8px_0px_#000] overflow-hidden bg-[#F9CE69]`}
+              >
+                <CardContent className="p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="font-bold text-gray-800">Carbs Today</p>
+                    <Apple className="h-6 w-6 text-black" />
+                  </div>
+                  {totalCarbsLoading ? (
+                    <p className="text-center text-gray-700 italic">
+                      Loading...
+                    </p>
+                  ) : totalCarbsIsError ? (
+                    <p className="text-center text-gray-700 italic">
+                      Error: {totalCarbsError.message}
+                    </p>
+                  ) : !totalCarbs ? (
+                    <p className="text-center text-gray-700 italic">
+                      No reading.
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-4xl font-bold text-black">
+                        {totalCarbs}
+                      </p>
+                      <div className="flex items-center gap-1">
+                        <p className="text-sm text-gray-700">grams</p>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+              {/* <StatCard
                 title="Glucose"
-                value="125"
+                value={glucoseReading.glucose}
                 unit="mg/dL"
                 trend="stable"
                 icon={Droplets}
                 color="bg-[#9BBBFC]"
-              />
-              <StatCard
+              /> */}
+              {/* <StatCard
                 title="Carbs Today"
                 value="85"
                 unit="grams"
                 trend="stable"
                 icon={Apple}
                 color="bg-[#F9CE69]"
-              />
+              /> */}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-1 gap-6">
@@ -130,8 +210,8 @@ export default function DashboardPage() {
               <CardContent className="space-y-4">
                 {notificationsLoading ? (
                   <p>Loading notifications...</p>
-                ) : isError ? (
-                  <p>Error: {error.message}</p>
+                ) : notificationsIsError ? (
+                  <p>Error: {notificationsError.message}</p>
                 ) : !notifications || notifications.length === 0 ? (
                   <p>No notifications yet.</p>
                 ) : (
@@ -169,35 +249,6 @@ export default function DashboardPage() {
   );
 }
 
-interface StatCardProps {
-  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
-  color: string;
-  title: string;
-  unit: string;
-  value: string;
-  trend: string;
-}
-
-const StatCard = ({ title, value, unit, icon: Icon, color }: StatCardProps) => {
-  return (
-    <Card
-      className={`rounded-2xl border-2 border-black shadow-[8px_8px_0px_#000] overflow-hidden ${color}`}
-    >
-      <CardContent className="p-4">
-        <div className="flex justify-between items-center mb-2">
-          <p className="font-bold text-gray-800">{title}</p>
-          <Icon className="h-6 w-6 text-black" />
-        </div>
-        <p className="text-4xl font-bold text-black">{value}</p>
-        <div className="flex items-center gap-1">
-          <p className="text-sm text-gray-700">{unit}</p>
-          <ArrowUp className="h-4 w-4 text-black" />
-        </div>
-      </CardContent>
-    </Card>
-  );
-};
-
 interface ActionCardProps {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
   color: string;
@@ -221,36 +272,6 @@ const ActionCard = ({
     <span className="font-bold">{title}</span>
   </Link>
 );
-
-// const AlertsPanel = (notifications: Notification[]) => (
-//   <Card className="bg-white rounded-2xl border-2 border-black shadow-[8px_8px_0px_#000] h-full">
-//     <CardHeader>
-//       <CardTitle className="flex items-center gap-2 text-xl font-bold">
-//         <Bell className="h-6 w-6" />
-//         Notifications & Alerts
-//       </CardTitle>
-//     </CardHeader>
-//     <CardContent className="space-y-4">
-//     {notifications.map((notification) => {
-//       <AlertItem
-//       key={notification.id}
-//       icon={AlertTriangle}
-//       color="text-blue-500"
-//       title={notification.title}
-//       description={notification.description}
-//       time={formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
-//     />
-//     }
-
-//       <Button
-//         variant="outline"
-//         className="w-full mt-4 border-2 border-black bg-gray-50"
-//       >
-//         View All
-//       </Button>
-//     </CardContent>
-//   </Card>
-// );
 
 interface AlertItemProps {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;
