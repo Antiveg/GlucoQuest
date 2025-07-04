@@ -1,5 +1,7 @@
-import { MealWithFood, MealWithFoodInput, MealWithoutFoodDetailsInput } from "@/types/meal";
+import { MealWithFood, MealWithoutFoodDetailsInput } from "@/types/meal";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { toast } from "sonner";
 
 // get user glucose readings by userid
 async function fetchUserMealsWithFoodsByUserId(date: string, offset: number) {
@@ -31,11 +33,12 @@ export function useCreateMealWithFoods() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: createMealWithFoods,
-    onSuccess: () => {
+    onSuccess: (newMeal) => {
       queryClient.invalidateQueries({ queryKey: ["user-meals-with-foods"] });
+      toast.success(`Meal Record on ${format(new Date(newMeal.time), "dd/MM/yyyy HH:mm")} created.`)
     },
     onError: (error) => {
-      console.error("Failed to create meal with foods:", error);
+      toast.error(error.message)
     },
   });
 }

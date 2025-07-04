@@ -1,5 +1,7 @@
 import { GlucoseReadingInput, GlucoseReading } from "@/types";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { format } from "date-fns";
+import { toast } from "sonner";
 
 // get user glucose readings by userid
 async function fetchGlucoseReadingsByUserId(date: string, offset: number) {
@@ -36,9 +38,10 @@ export function useDeleteUserGlucoseReadingById(date : string) {
         ["user-glucose-readings", date],
         (oldData) => oldData ? oldData.filter(r => r.id !== deletedRecord.id) : []
       );
+      toast.success(`Glucose Reading on ${format(new Date(deletedRecord.time),"dd-MM-yyyy HH:mm")} deleted.`)
     },
     onError: (error) => {
-      console.error("Error deleting glucose reading:", error);
+      toast.error(error.message)
     },
   });
 }
@@ -64,9 +67,10 @@ export function useCreateGlucoseReading(date : string) {
         ["user-glucose-readings", date],
         (oldData) => oldData ? [newRecord, ...oldData] : [newRecord]
       );
+      toast.success(`Glucose Reading on ${format(new Date(newRecord.time),"dd/MM/yyyy HH:mm")} created.`)
     },
     onError: (error) => {
-      console.error("Error creating glucose reading:", error);
+      toast.error(error.message)
     },
   });
 }
