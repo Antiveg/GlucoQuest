@@ -31,6 +31,7 @@ import {
   Plus,
   ArrowRight,
   ArrowDown,
+  Check,
 } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
@@ -39,6 +40,8 @@ import Loading from "@/components/loading";
 import ErrorBox from "@/components/error-box";
 import { Food } from "@/types/meal";
 import { useGetUserById, useUpdateUser } from "@/lib/client-queries/users";
+import { useUploadImages } from "@/lib/client-queries/upload-images";
+import { useCreateMealWithFoods } from "@/lib/client-queries/meals-with-foods";
 
 // const MOCK_FOOD_DB = [
 //   { id: 1, name: "Apple, medium", carbs: 25, servings: 1 },
@@ -58,21 +61,58 @@ interface FoodItemOverview extends Food {
 }
 
 export default function MealPlannerPage() {
-  const [mealTitle, setMealTitle] = useState("breakfast");
-  const [currentBg, setCurrentBg] = useState(0);
+  // user input (use globally so must be at above)
+  const [currentBg, setCurrentBg] = useState(0); // primarily for dose calculation
+  const [mealPhotoPreview, setMealPhotoPreview] = useState<string>(""); // primarily for image preview handling
+  const [doseConfirmed, setDoseConfirmed] = useState(false); // dose confirmation before/after eat
+
+  // insert meal inputs
+  const [mealTitle, setMealTitle] = useState("Breakfast");
   const [mealItems, setMealItems] = useState<FoodItemOverview[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [mealPhoto, setMealPhoto] = useState<string>("");
+  const [mealPhotoFiles, setMealPhotoFile] = useState<File[]>([])
+  const [doseTimestamp, setDoseTimestamp] = useState<Date|null>(null)
   const [notes, setNotes] = useState("");
-  const [icr, setIcr] = useState(10); // Insulin-to-Carb Ratio: 1 unit per 10g
-  const [tempIcr, setTempIcr] = useState(icr);
-  const [doseConfirmed, setDoseConfirmed] = useState(false);
-  const [doseTimestamp, setDoseTimestamp] = useState<number>(0);
-  const [elapsedTime, setElapsedTime] = useState(0);
-  const [reminderSet, setReminderSet] = useState<number>(0);
+  const { mutate: mutateUploadImages, isPending: uploadImagesPending } = useUploadImages()
+  const { mutate: mutateCreateMealWithFoods, isPending : createMealWithFoodsPending } = useCreateMealWithFoods()
+  const handleMealSubmit = () => {
+    if(!doseTimestamp) return
+    mutateUploadImages({
+      files: mealPhotoFiles,
+      context: 'user-meals'
+    },{
+      onSuccess: (data) => {
+        const totalCarbs = mealItems.reduce((sum, item) => sum + item.carbs * item.servings, 0);
+        const carbDose = totalCarbs > 0 && user.icRatio > 0 ? totalCarbs / user.icRatio : 0;
+        const correctionDose = currentBg > user.targetBG ? (currentBg - user.targetBG) / user.correctionFactor : 0;
+        const totalDose = carbDose + correctionDose;
 
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+        mutateCreateMealWithFoods({
+          name: mealTitle,
+          time: doseTimestamp.toISOString(),
+          photoUrl: data.urls[0],
+          totalCarbs: totalCarbs,
+          insulinDose: totalDose,
+          notes: notes,
+          mealFoods: mealItems.map(item => ({
+            servings: item.servings,
+            foodId: item.id,
+          }))
+        },{
+          onSuccess: () => {
+            setMealTitle("Breakfast")
+            setMealItems([])
+            setMealPhotoFile([])
+            setMealPhotoPreview("")
+            setCurrentBg(0)
+            setNotes("")
+            setDoseConfirmed(false)
+          }
+        })
+      }
+    })
+  }
 
+  // user-preferences related-functions
   const { data: user, isLoading: userLoading, isError: userIsError, error: userError } = useGetUserById()
   const { mutate: mutateUpdateUser, isPending: updateUserPending } = useUpdateUser()
   const [updatedUserInfo, setUpdatedUserInfo] = useState(user)
@@ -100,26 +140,8 @@ export default function MealPlannerPage() {
     setNewFoodGrams("");
   };
 
-  // Derived State & Calculations
-  const totalCarbs = useMemo(
-    () => mealItems.reduce((sum, item) => sum + item.carbs * item.servings, 0),
-    [mealItems]
-  );
-
-  const doseCalculation = useMemo(() => {
-    if (!totalCarbs && !currentBg)
-      return { carbDose: 0, correctionDose: 0, totalDose: 0 };
-    const carbDose = totalCarbs > 0 && icr > 0 ? totalCarbs / icr : 0;
-    const correctionDose =
-      currentBg > user.targetBG ? (currentBg - user.targetBG) / user.correctionFactor : 0;
-    const totalDose = carbDose + correctionDose;
-    return {
-      carbDose: parseFloat(carbDose.toFixed(1)),
-      correctionDose: parseFloat(correctionDose.toFixed(1)),
-      totalDose: parseFloat(totalDose.toFixed(1)),
-    };
-  }, [totalCarbs, currentBg, icr]);
-
+  // meal log related-functions
+  const [searchTerm, setSearchTerm] = useState("");
   const addFoodToMeal = (food: Food) => {
     if (mealItems.some(item => item.id === food.id)){
       setSearchTerm("")
@@ -138,37 +160,65 @@ export default function MealPlannerPage() {
   const removeFoodFromMeal = (id: number) => {
     setMealItems((prev) => prev.filter((item) => item.id !== id));
   };
+  const filteredFood = useMemo(() => {
+    if (!searchTerm) return [];
+    return foods?.filter((food : Food) =>
+      food.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm]);
+
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      setMealPhoto(URL.createObjectURL(e.target.files[0]));
+      setMealPhotoPreview(URL.createObjectURL(e.target.files[0]));
+      setMealPhotoFile([e.target.files[0]])
     }
   };
 
+  // dose calculations
+  const totalCarbs = useMemo(
+    () => mealItems.reduce((sum, item) => sum + item.carbs * item.servings, 0),   // Derived State & Calculations
+    [mealItems]
+  );
+  const doseCalculation = useMemo(() => {
+    if (!totalCarbs && !currentBg)
+      return { carbDose: 0, correctionDose: 0, totalDose: 0 };
+    const carbDose = totalCarbs > 0 && user.icRatio > 0 ? totalCarbs / user.icRatio : 0;
+    const correctionDose =
+      currentBg > user.targetBG ? (currentBg - user.targetBG) / user.correctionFactor : 0;
+    const totalDose = carbDose + correctionDose;
+    return {
+      carbDose: parseFloat(carbDose.toFixed(1)),
+      correctionDose: parseFloat(correctionDose.toFixed(1)),
+      totalDose: parseFloat(totalDose.toFixed(1)),
+    };
+  }, [totalCarbs, currentBg, user]);
+
+  // Confirm/undo take dose insulin based on calculation
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
   const handleConfirmDose = () => {
+    const now = new Date();
     setDoseConfirmed(true);
-    const now = Date.now();
-    setDoseTimestamp(now);
+    setDoseTimestamp(now)
     setElapsedTime(0);
     timerRef.current = setInterval(() => {
-      setElapsedTime(Date.now() - now);
+      setElapsedTime(Date.now() - now.getTime());
     }, 1000);
   };
-
   const handleUndoDose = () => {
     setDoseConfirmed(false);
-    setDoseTimestamp(0);
     setElapsedTime(0);
     if (timerRef.current !== null) {
       clearInterval(timerRef.current);
     }
   };
 
+  // make reminder post confirmation
+  const [reminderSet, setReminderSet] = useState<number>(0);
   const handleSetReminder = (hours: number) => {
     setReminderSet(hours);
     setTimeout(() => {
-      console.log(
-        `REMINDER: Time to check your blood glucose! It has been ${hours} hour(s).`
-      );
+      console.log(`REMINDER: Time to check your blood glucose! It has been ${hours} hour(s).`);
       //trigger a system notification.
     }, hours * 60 * 60 * 1000);
   };
@@ -181,13 +231,6 @@ export default function MealPlannerPage() {
       }
     };
   }, []);
-
-  const filteredFood = useMemo(() => {
-    if (!searchTerm) return [];
-    return foods?.filter((food : Food) =>
-      food.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
   
   if(foodsLoading || userLoading || !user) return <Loading message="Loading User's Meal Planner..."/>
   if(foodsIsError) return <ErrorBox error={foodsError}/>
@@ -197,7 +240,9 @@ export default function MealPlannerPage() {
     (elapsedTime / (user.eatCountdown * 60 * 1000)) * 100,
     100
   );
-  const timeToEat = user.eatCountdown * 60 - Math.floor(elapsedTime / 1000);
+  const timeToEat = user && user.eatCountdown !== undefined
+    ? user.eatCountdown * 60 - Math.floor(elapsedTime / 1000)
+    : null;
 
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
@@ -258,31 +303,41 @@ export default function MealPlannerPage() {
               </CardHeader>
               <CardContent className="flex flex-col sm:flex-row items-center gap-4">
                 <Input
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="\d*"
                   placeholder="Enter current BG..."
-                  value={currentBg}
-                  onChange={(e) => setCurrentBg(Number(e.target.value))}
-                  className="border-black h-12 text-lg font-bold"
+                  value={currentBg !== 0 ? String(currentBg) : ""}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (/^\d*$/.test(val)) {
+                      setCurrentBg(val === "" ? 0 : Number(val));
+                    }
+                  }}
+                  className="border-black h-12 text-lg font-bold flex-1"
                   disabled={doseConfirmed}
                 />
-                {currentBg && (
-                  <div
-                    className={`w-full sm:w-auto text-center font-bold p-3 rounded-lg border-2 border-black ${
-                      currentBg > 180
-                        ? "bg-orange-200"
-                        : currentBg < 70
-                        ? "bg-red-200"
-                        : "bg-green-200"
-                    }`}
-                  >
-                    {currentBg > 180
-                      ? "High"
+
+                <div
+                  className={`w-auto text-center font-bold p-3 rounded-lg border-2 border-black ${
+                    currentBg === 0
+                      ? "bg-gray-200"
+                      : currentBg > 180
+                      ? "bg-orange-200"
                       : currentBg < 70
-                      ? "Low"
-                      : "In Range"}{" "}
-                    ({currentBg} mg/dL)
-                  </div>
-                )}
+                      ? "bg-red-200"
+                      : "bg-green-200"
+                  }`}
+                >
+                  {currentBg === 0
+                    ? "?"
+                    : currentBg > 180
+                    ? "High"
+                    : currentBg < 70
+                    ? "Low"
+                    : "Normal"}{" "}
+                  ({currentBg} mg/dL)
+                </div>
               </CardContent>
             </Card>
 
@@ -431,17 +486,18 @@ export default function MealPlannerPage() {
               <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label>Meal Photo</Label>
-                  {mealPhoto ? (
+                  {mealPhotoPreview ? (
                     <div className="relative">
                       <img
-                        src={mealPhoto}
+                        src={mealPhotoPreview}
                         alt="Meal"
                         className="w-full h-32 object-cover rounded-lg border-2 border-black"
                       />
                       <Button
-                        onClick={() => setMealPhoto("")}
+                        onClick={() => setMealPhotoPreview("")}
                         size="icon"
                         className="absolute top-2 right-2 h-8 w-8 bg-black/50 hover:bg-black/70 text-white rounded-full"
+                        disabled={doseConfirmed}
                       >
                         <X size={16} />
                       </Button>
@@ -614,7 +670,6 @@ export default function MealPlannerPage() {
                         variant="outline"
                         className="h-8 w-full"
                         onClick={() => {
-                          setTempIcr(icr);
                           setIsEditingUserInfo(true);
                         }}
                         disabled={updateUserPending}
@@ -641,7 +696,7 @@ export default function MealPlannerPage() {
                 <Button
                   className="w-full h-12 bg-[#4741A6] text-white font-bold"
                   onClick={handleConfirmDose}
-                  disabled={doseCalculation.totalDose <= 0 || doseConfirmed}
+                  disabled={doseCalculation.totalDose <= 0 || doseConfirmed || createMealWithFoodsPending || uploadImagesPending || isEditingUserInfo}
                 >
                   <Syringe className="mr-2" /> Confirm Dose Taken
                 </Button>
@@ -665,7 +720,7 @@ export default function MealPlannerPage() {
                       className="w-full mt-1"
                     />
                     <p className="text-center font-bold text-lg mt-2">
-                      {timeToEat > 0
+                      {timeToEat && timeToEat > 0
                         ? `${Math.floor(timeToEat / 60)}m ${timeToEat % 60}s`
                         : "Ready to Eat!"}
                     </p>
@@ -698,7 +753,7 @@ export default function MealPlannerPage() {
                     )}
                   </div>
                 </CardContent>
-                <CardFooter>
+                <CardFooter className="flex flex-col gap-3">
                   <Button
                     variant="outline"
                     className="w-full"
@@ -706,6 +761,15 @@ export default function MealPlannerPage() {
                   >
                     <Undo2 className="mr-2" />
                     Undo Confirmation
+                  </Button>
+                  <Button
+                    variant="default"
+                    className={(timeToEat === null || timeToEat > 0) ? "w-full bg-red-500 hover:bg-red-700" : "w-full bg-green-500 hover:bg-green-700"}
+                    onClick={() => handleMealSubmit()}
+                    disabled={timeToEat === null || timeToEat > 0}
+                  >
+                    <Check className="mr-2"/>
+                    Finish Eating
                   </Button>
                 </CardFooter>
               </Card>

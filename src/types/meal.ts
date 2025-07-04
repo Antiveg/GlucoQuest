@@ -13,15 +13,31 @@ export interface FoodWithServing extends Food {
   servings: number
 }
 
-export interface MealWithFood {
+export interface MealWithFood extends MealWithFoodInput {
   id: number;
   userId: number;
+  createdAt: string;
+}
+
+export interface MealWithFoodInput {
   name: string;
   time: string;
   photoUrl: string;
   totalCarbs: number;
   insulinDose: number;
   notes: string;
-  createdAt: string;
-  foods: FoodWithServing[];
+  mealFoods: FoodWithServing[];
+}
+
+export interface MealWithoutFoodDetailsInput {
+  name: string;
+  time: string;
+  photoUrl: string;
+  totalCarbs: number;
+  insulinDose: number;
+  notes: string;
+  mealFoods: {
+    foodId: number
+    servings: number
+  }[];
 }

@@ -70,3 +70,10 @@ export interface Notification {
   description?: string;
   created_at: string;
 }
+
+export interface MealFoods {
+  id: number
+  mealId: number
+  foodId: number
+  servings: number
+}

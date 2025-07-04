@@ -1,4 +1,5 @@
-import { getUserMealsWithFoodsByUserIdQuery } from "@/lib/data-layers/meal";
+import { Prisma } from "@/database/prisma-client";
+import { createMealWithFoodsQuery, getUserMealsWithFoodsByUserIdQuery } from "@/lib/data-layers/meal";
 
 export async function getUserMealsWithFoodsByUserIdService(uid : string, date : string, timezoneOffsetMinutes : number){
     try {
@@ -11,14 +12,46 @@ export async function getUserMealsWithFoodsByUserIdService(uid : string, date : 
             ...meal,
             createdAt: meal.createdAt.toISOString(),
             time: meal.time.toISOString(),
-            foods: meal.mealFoods.map((mf) => ({
+            mealFoods: meal.mealFoods.map((mf) => ({
                 ...mf.food,
                 createdAt: mf.food.createdAt.toISOString(),
                 servings: mf.servings,
             })),
         }));
-        console.log(flattenedMeals);
+        // console.log(flattenedMeals)
         return flattenedMeals
+    } catch (error: unknown) {
+        if(error instanceof Error){
+            console.error(error);
+            throw new Error(error.message);
+        }
+        console.error(error);
+        throw new Error("Internal Server Error");
+    }
+}
+
+type CreateMealPayload = Omit<Prisma.MealCreateInput, "mealFoods" | "user"> & {
+  mealFoods: { foodId: number; servings: number }[];
+};
+
+export async function createMealWithFoodsService(uid : string, payload : CreateMealPayload) {
+    try {
+        const userId = Number(uid)
+        if (isNaN(userId)) throw new Error("Invalid user id queried.");
+
+        const { mealFoods, ...meal } = payload;
+        const input : Prisma.MealCreateInput = {
+            ...meal,
+            user: { connect: { id: userId } },
+            mealFoods: {
+                create: mealFoods?.map((mf) => ({
+                    servings: mf.servings,
+                    food: { connect: { id: mf.foodId } },
+                })),
+            },
+        };
+        const createdMealWithFoods = await createMealWithFoodsQuery(input);
+        return createdMealWithFoods
     } catch (error: unknown) {
         if(error instanceof Error){
             console.error(error);

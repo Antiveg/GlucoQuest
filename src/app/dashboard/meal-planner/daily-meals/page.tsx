@@ -177,6 +177,16 @@ export default function DailyMealLogPage() {
               >
                 <ChevronRight />
               </Button>
+              <input
+                type="date"
+                value={format(currentDate, "yyyy-MM-dd")}
+                onChange={(e) => {
+                  const selectedDate = new Date(e.target.value + "T00:00:00");
+                  setCurrentDate(selectedDate);
+                }}
+                className="h-10 rounded-lg border-2 border-black bg-white px-2 text-sm"
+                max={format(new Date(), "yyyy-MM-dd")}
+              />
             </div>
           </div>
           <a href="/dashboard/meal-planner">
@@ -241,7 +251,7 @@ const MealLogCard = ({meal} : {meal : MealWithFood}) => {
               Foods
             </h4>
             <ul className="list-disc list-inside bg-gray-50 p-3 rounded-lg border border-gray-200">
-              {meal.foods.map((food, index) => (
+              {meal.mealFoods.map((food, index) => (
                 <li key={index} className="text-gray-800">
                   {food.servings}x {food.name}
                 </li>
@@ -262,7 +272,7 @@ const MealLogCard = ({meal} : {meal : MealWithFood}) => {
                 <Syringe size={14} />
                 Insulin
               </p>
-              <p className="font-extrabold text-2xl">{meal.insulinDose}u</p>
+              <p className="font-extrabold text-2xl">{meal.insulinDose.toFixed(1)}u</p>
             </div>
           </div>
 
