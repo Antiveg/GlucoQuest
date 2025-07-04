@@ -108,7 +108,10 @@ import ErrorBox from "@/components/error-box";
 
 export default function DailyGlucosePage() {
 
-  const [currentDate, setCurrentDate] = useState(new Date(Date.UTC(2025, 5, 13, 0, 0, 0)));
+  const [currentDate, setCurrentDate] = useState(() => {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+  });
   const [unit, setUnit] = useState<"mg/dL" | "mmol/L">("mg/dL");
 
   const { data: UserGlucoseReadings, isLoading: UserGlucoseReadingsLoading, isError, error } = useGlucoseReadingsByUserId(currentDate.toISOString())
@@ -179,6 +182,17 @@ export default function DailyGlucosePage() {
               >
                 <ChevronRight />
               </Button>
+              <input
+                type="date"
+                value={format(currentDate, "yyyy-MM-dd")}
+                onChange={(e) => {
+                  const [year, month, day] = e.target.value.split("-");
+                  const selectedDate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), 0, 0, 0));
+                  setCurrentDate(selectedDate);
+                }}
+                className="h-10 rounded-lg border-2 border-black bg-white px-2 text-sm"
+                max={format(new Date(), "yyyy-MM-dd")}
+              />
             </div>
           </div>
           <Link

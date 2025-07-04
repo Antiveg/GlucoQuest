@@ -147,7 +147,10 @@ import ErrorBox from "@/components/error-box";
 export default function DailyMealLogPage() {
   // const [meals, setMeals] = useState<MealWithFood[]>(MOCK_LOGGED_MEALS);
 
-  const [currentDate, setCurrentDate] = useState(new Date(Date.UTC(2025, 5, 13, 0, 0, 0)));
+  const [currentDate, setCurrentDate] = useState(() => {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+  });
   const { data: meals, isLoading : MealsWithFoodsLoading, isError, error } = useUserMealsWithFoodsByUserId(currentDate.toISOString())
 
   if(MealsWithFoodsLoading) return <Loading message="Loading User Meals with Foods..."/>
@@ -181,7 +184,8 @@ export default function DailyMealLogPage() {
                 type="date"
                 value={format(currentDate, "yyyy-MM-dd")}
                 onChange={(e) => {
-                  const selectedDate = new Date(e.target.value + "T00:00:00");
+                  const [year, month, day] = e.target.value.split("-");
+                  const selectedDate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), 0, 0, 0));
                   setCurrentDate(selectedDate);
                 }}
                 className="h-10 rounded-lg border-2 border-black bg-white px-2 text-sm"

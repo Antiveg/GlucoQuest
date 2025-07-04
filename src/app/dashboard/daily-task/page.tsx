@@ -21,138 +21,141 @@ import { useDailyTasksByUserId, useDeleteTaskById, useUpdateTaskCompletionStatus
 import Loading from "@/components/loading";
 import ErrorBox from "@/components/error-box";
 
-const initialTasks: Task[] = [
-  {
-    id: 1,
-    user_id: 101,
-    task: "Morning blood sugar",
-    deadline: "07:00 AM",
-    details: "Measure blood sugar before meal",
-    done: false,
-    created_at: "2025-06-13T06:50:00",
-  },
-  {
-    id: 2,
-    user_id: 101,
-    task: "Morning long-acting insulin",
-    deadline: "07:05 AM",
-    details: "Inject basal insulin dose",
-    done: true,
-    created_at: "2025-06-13T06:55:00",
-  },
-  {
-    id: 3,
-    user_id: 101,
-    task: "Take rapid-acting insulin (before breakfast)",
-    deadline: "07:10 AM",
-    details: "Inject before breakfast",
-    done: false,
-    created_at: "2025-06-13T07:00:00",
-  },
-  {
-    id: 4,
-    user_id: 101,
-    task: "Eat breakfast",
-    deadline: "07:15 AM",
-    details: "",
-    done: false,
-    created_at: "2025-06-13T07:05:00",
-  },
-  {
-    id: 5,
-    user_id: 101,
-    task: "Check blood sugar (mid-morning)",
-    deadline: "10:00 AM",
-    details: "",
-    done: false,
-    created_at: "2025-06-13T09:00:00",
-  },
-  {
-    id: 6,
-    user_id: 101,
-    task: "Check blood sugar (lunch)",
-    deadline: "12:00 PM",
-    details: "",
-    done: false,
-    created_at: "2025-06-13T11:00:00",
-  },
-  {
-    id: 7,
-    user_id: 101,
-    task: "Take rapid-acting insulin (lunch)",
-    deadline: "12:05 PM",
-    details: "Inject before lunch",
-    done: false,
-    created_at: "2025-06-13T11:05:00",
-  },
-  {
-    id: 8,
-    user_id: 101,
-    task: "Eat lunch",
-    deadline: "12:10 PM",
-    details: "",
-    done: false,
-    created_at: "2025-06-13T11:10:00",
-  },
-  {
-    id: 9,
-    user_id: 101,
-    task: "Check blood sugar (mid-afternoon)",
-    deadline: "03:00 PM",
-    details: "",
-    done: false,
-    created_at: "2025-06-13T14:00:00",
-  },
-  {
-    id: 10,
-    user_id: 101,
-    task: "Check blood sugar (dinner)",
-    deadline: "06:00 PM",
-    details: "",
-    done: false,
-    created_at: "2025-06-13T17:00:00",
-  },
-  {
-    id: 11,
-    user_id: 101,
-    task: "Take rapid-acting insulin (dinner)",
-    deadline: "06:05 PM",
-    details: "Inject before dinner",
-    done: false,
-    created_at: "2025-06-13T17:05:00",
-  },
-  {
-    id: 12,
-    user_id: 101,
-    task: "Eat dinner",
-    deadline: "06:10 PM",
-    details: "",
-    done: false,
-    created_at: "2025-06-13T17:10:00",
-  },
-  {
-    id: 13,
-    user_id: 101,
-    task: "Check blood sugar (night)",
-    deadline: "09:00 PM",
-    details: "",
-    done: false,
-    created_at: "2025-06-13T20:00:00",
-  },
-  {
-    id: 14,
-    user_id: 101,
-    task: "Check final blood sugar (bedtime)",
-    deadline: "10:00 PM",
-    details: "",
-    done: false,
-    created_at: "2025-06-13T21:00:00",
-  },
-];
+// const initialTasks: Task[] = [
+//   {
+//     id: 1,
+//     user_id: 101,
+//     task: "Morning blood sugar",
+//     deadline: "07:00 AM",
+//     details: "Measure blood sugar before meal",
+//     done: false,
+//     created_at: "2025-06-13T06:50:00",
+//   },
+//   {
+//     id: 2,
+//     user_id: 101,
+//     task: "Morning long-acting insulin",
+//     deadline: "07:05 AM",
+//     details: "Inject basal insulin dose",
+//     done: true,
+//     created_at: "2025-06-13T06:55:00",
+//   },
+//   {
+//     id: 3,
+//     user_id: 101,
+//     task: "Take rapid-acting insulin (before breakfast)",
+//     deadline: "07:10 AM",
+//     details: "Inject before breakfast",
+//     done: false,
+//     created_at: "2025-06-13T07:00:00",
+//   },
+//   {
+//     id: 4,
+//     user_id: 101,
+//     task: "Eat breakfast",
+//     deadline: "07:15 AM",
+//     details: "",
+//     done: false,
+//     created_at: "2025-06-13T07:05:00",
+//   },
+//   {
+//     id: 5,
+//     user_id: 101,
+//     task: "Check blood sugar (mid-morning)",
+//     deadline: "10:00 AM",
+//     details: "",
+//     done: false,
+//     created_at: "2025-06-13T09:00:00",
+//   },
+//   {
+//     id: 6,
+//     user_id: 101,
+//     task: "Check blood sugar (lunch)",
+//     deadline: "12:00 PM",
+//     details: "",
+//     done: false,
+//     created_at: "2025-06-13T11:00:00",
+//   },
+//   {
+//     id: 7,
+//     user_id: 101,
+//     task: "Take rapid-acting insulin (lunch)",
+//     deadline: "12:05 PM",
+//     details: "Inject before lunch",
+//     done: false,
+//     created_at: "2025-06-13T11:05:00",
+//   },
+//   {
+//     id: 8,
+//     user_id: 101,
+//     task: "Eat lunch",
+//     deadline: "12:10 PM",
+//     details: "",
+//     done: false,
+//     created_at: "2025-06-13T11:10:00",
+//   },
+//   {
+//     id: 9,
+//     user_id: 101,
+//     task: "Check blood sugar (mid-afternoon)",
+//     deadline: "03:00 PM",
+//     details: "",
+//     done: false,
+//     created_at: "2025-06-13T14:00:00",
+//   },
+//   {
+//     id: 10,
+//     user_id: 101,
+//     task: "Check blood sugar (dinner)",
+//     deadline: "06:00 PM",
+//     details: "",
+//     done: false,
+//     created_at: "2025-06-13T17:00:00",
+//   },
+//   {
+//     id: 11,
+//     user_id: 101,
+//     task: "Take rapid-acting insulin (dinner)",
+//     deadline: "06:05 PM",
+//     details: "Inject before dinner",
+//     done: false,
+//     created_at: "2025-06-13T17:05:00",
+//   },
+//   {
+//     id: 12,
+//     user_id: 101,
+//     task: "Eat dinner",
+//     deadline: "06:10 PM",
+//     details: "",
+//     done: false,
+//     created_at: "2025-06-13T17:10:00",
+//   },
+//   {
+//     id: 13,
+//     user_id: 101,
+//     task: "Check blood sugar (night)",
+//     deadline: "09:00 PM",
+//     details: "",
+//     done: false,
+//     created_at: "2025-06-13T20:00:00",
+//   },
+//   {
+//     id: 14,
+//     user_id: 101,
+//     task: "Check final blood sugar (bedtime)",
+//     deadline: "10:00 PM",
+//     details: "",
+//     done: false,
+//     created_at: "2025-06-13T21:00:00",
+//   },
+// ];
 
 export default function DailyToDoListPage() {
   // const [tasks, setTasks] = useState(initialTasks);
-  const [currentDate, setCurrentDate] = useState(new Date(Date.UTC(2025, 5, 13, 0, 0, 0)));
+  const [currentDate, setCurrentDate] = useState(() => {
+    const now = new Date();
+    return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 0, 0, 0));
+  });
   const { data: tasks, isLoading: UserDailyTasksLoading, isError, error } = useDailyTasksByUserId(currentDate.toISOString())
   const { mutate: mutateUpdateTaskCompletionStatus, isPending: isPendingUpdate } = useUpdateTaskCompletionStatus(currentDate.toISOString())
   const { mutate: mutateDeleteTaskById, isPending: isPendingDelete } = useDeleteTaskById(currentDate.toISOString())
@@ -206,6 +209,17 @@ export default function DailyToDoListPage() {
               >
                 <ChevronRight />
               </Button>
+              <input
+                type="date"
+                value={format(currentDate, "yyyy-MM-dd")}
+                onChange={(e) => {
+                  const [year, month, day] = e.target.value.split("-");
+                  const selectedDate = new Date(Date.UTC(Number(year), Number(month) - 1, Number(day), 0, 0, 0));
+                  setCurrentDate(selectedDate);
+                }}
+                className="h-10 rounded-lg border-2 border-black bg-white px-2 text-sm"
+                max={format(new Date(), "yyyy-MM-dd")}
+              />
             </div>
           </div>
           <Link
