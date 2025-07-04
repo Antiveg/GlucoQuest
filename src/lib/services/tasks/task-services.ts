@@ -47,10 +47,10 @@ export async function deleteTaskByIdService(userId: string, taskId: string) {
       const userIdNum = Number(userId);
       if (isNaN(taskIdNum)) throw new Error("Invalid task ID");
 
-      const deletedReading = await deleteTaskByIdQuery(userIdNum, taskIdNum);
-      if (!deletedReading) throw new Error("Failed to delete user's daily task.");
+      const deletedTask = await deleteTaskByIdQuery(userIdNum, taskIdNum);
+      if (!deletedTask) throw new Error("Failed to delete user's daily task.");
       
-      return deletedReading
+      return deletedTask
     } catch (error: unknown) {
       if (error instanceof Error) {
         console.error(error);

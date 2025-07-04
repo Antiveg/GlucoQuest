@@ -1,6 +1,6 @@
 import { protectApiRoute } from "@/lib/auth/protect-api";
 import { deleteTaskByIdService, updateTaskCompletionStatusService } from "@/lib/services/tasks/task-services";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 export async function PATCH(request: Request, { params }: { params: { taskId: string } }) {
 
@@ -24,15 +24,15 @@ export async function PATCH(request: Request, { params }: { params: { taskId: st
     }
 }
 
-export async function DELETE({ params }: { params: { taskId: string } }) {
+export async function DELETE(_request: NextRequest, { params }: { params: { taskId: string } }) {
 
     const session = await protectApiRoute();
     if (!session) return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
 
     try {
         const { taskId } = await params
-        const updatedTask = await deleteTaskByIdService(session.user.id, taskId);
-        return NextResponse.json(updatedTask, { status: 200 });
+        const response = await deleteTaskByIdService(session.user.id, taskId);
+        return NextResponse.json(response, { status: 200 });
     } catch (error: unknown) {
         console.error("PATCH /api/user/daily-tasks/[taskId] error:", error);
         return NextResponse.json(
