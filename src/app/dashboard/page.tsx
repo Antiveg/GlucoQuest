@@ -9,7 +9,6 @@ import {
   Swords,
   User,
   AlertTriangle,
-  Watch,
   ArrowUp,
   Calendar,
 } from "lucide-react";
@@ -17,11 +16,24 @@ import { useSession } from "next-auth/react";
 import Loading from "@/components/loading";
 import { ReminderCarousel } from "@/components/dashboard/ReminderCarousel";
 import Link from "next/link";
+import { useRecentNotificationsByUserId } from "@/lib/client-queries/notifications";
+import { formatDistanceToNow } from "date-fns";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
+  const {
+    data: notifications,
+    isLoading: notificationsLoading,
+    isError,
+    error,
+  } = useRecentNotificationsByUserId();
   if (status === "loading")
     return <Loading message="Loading User Information ..." />;
+
+  // if (notificationsLoading) return <p>Loading notifications...</p>;
+  // if (isError) return <p>Error: {error.message}</p>;
+  // if (!notifications || notifications.length === 0)
+  //   return <p>No notifications yet.</p>;
 
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
@@ -108,7 +120,48 @@ export default function DashboardPage() {
           </div>
 
           <div className="lg:col-span-1">
-            <AlertsPanel />
+            <Card className="bg-white rounded-2xl border-2 border-black shadow-[8px_8px_0px_#000] h-full">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-xl font-bold">
+                  <Bell className="h-6 w-6" />
+                  Notifications & Alerts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {notificationsLoading ? (
+                  <p>Loading notifications...</p>
+                ) : isError ? (
+                  <p>Error: {error.message}</p>
+                ) : !notifications || notifications.length === 0 ? (
+                  <p>No notifications yet.</p>
+                ) : (
+                  <>
+                    {notifications.map((notification) => (
+                      <AlertItem
+                        key={notification.id}
+                        icon={AlertTriangle}
+                        color="text-blue-500"
+                        title={notification.title}
+                        description={notification.description}
+                        time={formatDistanceToNow(
+                          new Date(notification.createdAt),
+                          {
+                            addSuffix: true,
+                          }
+                        )}
+                      />
+                    ))}
+
+                    <Button
+                      variant="outline"
+                      className="w-full mt-4 border-2 border-black bg-gray-50"
+                    >
+                      View All
+                    </Button>
+                  </>
+                )}
+              </CardContent>
+            </Card>
           </div>
         </div>
       </div>
@@ -169,45 +222,35 @@ const ActionCard = ({
   </Link>
 );
 
-const AlertsPanel = () => (
-  <Card className="bg-white rounded-2xl border-2 border-black shadow-[8px_8px_0px_#000] h-full">
-    <CardHeader>
-      <CardTitle className="flex items-center gap-2 text-xl font-bold">
-        <Bell className="h-6 w-6" />
-        Notifications & Alerts
-      </CardTitle>
-    </CardHeader>
-    <CardContent className="space-y-4">
-      <AlertItem
-        icon={AlertTriangle}
-        color="text-red-500"
-        title="Hypo Warning"
-        description="Glucose at 68 mg/dL. Consider a snack."
-        time="5 min ago"
-      />
-      <AlertItem
-        icon={AlertTriangle}
-        color="text-yellow-500"
-        title="Hyper Warning"
-        description="Glucose rising quickly. Currently 210 mg/dL."
-        time="45 min ago"
-      />
-      <AlertItem
-        icon={Watch}
-        color="text-blue-500"
-        title="Missed Dose"
-        description="Don't forget your long-acting insulin."
-        time="2 hours ago"
-      />
-      <Button
-        variant="outline"
-        className="w-full mt-4 border-2 border-black bg-gray-50"
-      >
-        View All
-      </Button>
-    </CardContent>
-  </Card>
-);
+// const AlertsPanel = (notifications: Notification[]) => (
+//   <Card className="bg-white rounded-2xl border-2 border-black shadow-[8px_8px_0px_#000] h-full">
+//     <CardHeader>
+//       <CardTitle className="flex items-center gap-2 text-xl font-bold">
+//         <Bell className="h-6 w-6" />
+//         Notifications & Alerts
+//       </CardTitle>
+//     </CardHeader>
+//     <CardContent className="space-y-4">
+//     {notifications.map((notification) => {
+//       <AlertItem
+//       key={notification.id}
+//       icon={AlertTriangle}
+//       color="text-blue-500"
+//       title={notification.title}
+//       description={notification.description}
+//       time={formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })}
+//     />
+//     }
+
+//       <Button
+//         variant="outline"
+//         className="w-full mt-4 border-2 border-black bg-gray-50"
+//       >
+//         View All
+//       </Button>
+//     </CardContent>
+//   </Card>
+// );
 
 interface AlertItemProps {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>;

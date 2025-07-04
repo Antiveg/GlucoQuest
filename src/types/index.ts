@@ -65,8 +65,8 @@ export interface CgmDeviceInput {
 
 export interface Notification {
   id: number;
-  user_id: number;
+  userId: number;
   title: string;
-  description?: string;
-  created_at: string;
+  description: string;
+  createdAt: string;
 }
