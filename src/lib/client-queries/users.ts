@@ -34,5 +34,48 @@ export function useCreateUser() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
     },
+    onError: (error) => {
+      console.error("Failed to create user:", error);
+    },
+  });
+}
+
+// fetch authenticated user
+async function getUserById() {
+  const res = await fetch("/api/user");
+  if (!res.ok) throw new Error("Failed to fetch user");
+  return res.json();
+}
+
+export function useGetUserById() {
+  return useQuery({
+    queryKey: ["user"],
+    queryFn: getUserById,
+  });
+}
+
+// update authenticated user
+async function updateUser(user: Prisma.UserUpdateInput) {
+  const res = await fetch("/api/user", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(user),
+  });
+  if (!res.ok) throw new Error("Failed to update user");
+  return res.json();
+}
+
+export function useUpdateUser() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateUser,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["users"] });
+      queryClient.invalidateQueries({ queryKey: ["user"] });
+    },
+    onError: (error) => {
+      console.error("Failed to update user:", error);
+    },
   });
 }

@@ -1,6 +1,6 @@
 import { Prisma } from "@/database/prisma-client";
 import { protectApiRoute } from "@/lib/auth/protect-api";
-import { queryCreateUser, queryUsers } from "@/lib/data-layers/users";
+import { getUserByIdQuery, queryCreateUser, queryUsers, updateUserQuery } from "@/lib/data-layers/users";
 import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
 
@@ -42,6 +42,36 @@ export async function createUserService(user : Prisma.UserCreateInput) {
                 createdAt: createdUser.createdAt,
             },
         };
+    } catch (error: unknown) {
+        if(error instanceof Error){
+            console.error(error);
+            throw new Error(error.message);
+        }
+        console.error(error);
+        throw new Error("Internal Server Error");
+    }
+}
+
+export async function getUserByIdService(uid : string) {
+
+    try {
+        const user = await getUserByIdQuery(Number(uid));
+        return user
+    } catch (error) {
+        if(error instanceof Error){
+            console.error(error);
+            throw new Error(error.message);
+        }
+        console.error(error);
+        throw new Error("Internal Server Error");
+    }
+}
+
+export async function updateUserService(uid : string, record : Prisma.UserUpdateInput){
+    try {
+        const updatedUser = await updateUserQuery(Number(uid), record)
+        if (!updatedUser) throw new Error("Failed to update user information due to unknown error.");
+        return updatedUser
     } catch (error: unknown) {
         if(error instanceof Error){
             console.error(error);

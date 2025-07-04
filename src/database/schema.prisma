@@ -15,12 +15,17 @@ datasource db {
 }
 
 model User {
-  id          Int        @id @default(autoincrement())
-  email       String     @unique
-  password    String
-  image       String?
-  name        String
-  ic_ratio    Float?
+  id                Int        @id @default(autoincrement())
+  email             String     @unique
+  password          String
+  image             String?
+  name              String
+
+  icRatio           Float      @default(10.0)
+  targetBG          Int        @default(110)
+  correctionFactor  Int        @default(50)
+  eatCountdown      Int        @default(30)
+
   createdAt   DateTime   @default(now())
   
   glucoseReadings GlucoseReading[]

@@ -30,6 +30,7 @@ import {
   ClipboardList,
   Plus,
   ArrowRight,
+  ArrowDown,
 } from "lucide-react";
 import Link from "next/link";
 import { Progress } from "@/components/ui/progress";
@@ -37,6 +38,7 @@ import { useCreateUserFood, useDeleteUserFood, useGetUserFoods } from "@/lib/cli
 import Loading from "@/components/loading";
 import ErrorBox from "@/components/error-box";
 import { Food } from "@/types/meal";
+import { useGetUserById, useUpdateUser } from "@/lib/client-queries/users";
 
 // const MOCK_FOOD_DB = [
 //   { id: 1, name: "Apple, medium", carbs: 25, servings: 1 },
@@ -51,10 +53,6 @@ import { Food } from "@/types/meal";
 //   { id: 10, name: "Pizza, 1 slice", carbs: 36, servings: 1 },
 // ];
 
-const TARGET_BG = 120; // mg/dL
-const CORRECTION_FACTOR = 50; // 1 unit of insulin lowers BG by 50 mg/dL
-const EAT_COUNTDOWN_MINUTES = 30;
-
 interface FoodItemOverview extends Food {
   servings: number;
 }
@@ -67,22 +65,28 @@ export default function MealPlannerPage() {
   const [mealPhoto, setMealPhoto] = useState<string>("");
   const [notes, setNotes] = useState("");
   const [icr, setIcr] = useState(10); // Insulin-to-Carb Ratio: 1 unit per 10g
-  const [isEditingIcr, setIsEditingIcr] = useState(false);
   const [tempIcr, setTempIcr] = useState(icr);
   const [doseConfirmed, setDoseConfirmed] = useState(false);
   const [doseTimestamp, setDoseTimestamp] = useState<number>(0);
   const [elapsedTime, setElapsedTime] = useState(0);
   const [reminderSet, setReminderSet] = useState<number>(0);
 
+  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const { data: user, isLoading: userLoading, isError: userIsError, error: userError } = useGetUserById()
+  const { mutate: mutateUpdateUser, isPending: updateUserPending } = useUpdateUser()
+  const [updatedUserInfo, setUpdatedUserInfo] = useState(user)
+  const [isEditingUserInfo, setIsEditingUserInfo] = useState(false)
+  useEffect(() => {
+    if (user) setUpdatedUserInfo(user);
+  }, [user]);
+
   const [newFoodName, setNewFoodName] = useState("");
   const [newFoodCarbs, setNewFoodCarbs] = useState("");
   const [newFoodGrams, setNewFoodGrams] = useState("");
-
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
+  const { data: foods, isLoading: foodsLoading, isError: foodsIsError, error: foodsError} = useGetUserFoods()
   const { mutate: mutateDeleteUserFood, isPending: deleteFoodPending } = useDeleteUserFood()
   const { mutate: mutateCreateUserFood, isPending: createFoodPending } = useCreateUserFood()
-
   const handleAddNewFood = () => {
     if (!newFoodName || !newFoodCarbs || !newFoodGrams) return;
     mutateCreateUserFood({
@@ -96,8 +100,6 @@ export default function MealPlannerPage() {
     setNewFoodGrams("");
   };
 
-  const { data: foods, isLoading: foodsLoading, isError: foodsIsError, error: foodsError} = useGetUserFoods()
-
   // Derived State & Calculations
   const totalCarbs = useMemo(
     () => mealItems.reduce((sum, item) => sum + item.carbs * item.servings, 0),
@@ -109,7 +111,7 @@ export default function MealPlannerPage() {
       return { carbDose: 0, correctionDose: 0, totalDose: 0 };
     const carbDose = totalCarbs > 0 && icr > 0 ? totalCarbs / icr : 0;
     const correctionDose =
-      currentBg > TARGET_BG ? (currentBg - TARGET_BG) / CORRECTION_FACTOR : 0;
+      currentBg > user.targetBG ? (currentBg - user.targetBG) / user.correctionFactor : 0;
     const totalDose = carbDose + correctionDose;
     return {
       carbDose: parseFloat(carbDose.toFixed(1)),
@@ -186,15 +188,16 @@ export default function MealPlannerPage() {
       food.name.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [searchTerm]);
+  
+  if(foodsLoading || userLoading || !user) return <Loading message="Loading User's Meal Planner..."/>
+  if(foodsIsError) return <ErrorBox error={foodsError}/>
+  if(userIsError) return <ErrorBox error={userError}/>
 
   const countdownProgress = Math.min(
-    (elapsedTime / (EAT_COUNTDOWN_MINUTES * 60 * 1000)) * 100,
+    (elapsedTime / (user.eatCountdown * 60 * 1000)) * 100,
     100
   );
-  const timeToEat = EAT_COUNTDOWN_MINUTES * 60 - Math.floor(elapsedTime / 1000);
-  
-  if(foodsLoading) return <Loading message="Loading User Glucose Loading"/>
-  if(foodsIsError) return <ErrorBox error={foodsError}/>
+  const timeToEat = user.eatCountdown * 60 - Math.floor(elapsedTime / 1000);
 
   return (
     <div className="min-h-screen w-full bg-[#F0F8FF] font-sans p-4 sm:p-6 lg:p-8">
@@ -474,50 +477,149 @@ export default function MealPlannerPage() {
                   <Calculator /> Insulin Dose
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex justify-between items-center p-3 bg-blue-50 rounded-lg border">
-                  <Label className="font-bold">IC Ratio</Label>
-                  {isEditingIcr ? (
-                    <div className="flex items-center gap-1">
-                      <Input
-                        type="number"
-                        value={tempIcr}
-                        onChange={(e) => setTempIcr(Number(e.target.value))}
-                        className="w-20 h-9 border-black"
-                      />
-                      <Button
-                        size="icon"
-                        className="h-8 w-8 bg-green-500"
-                        onClick={() => {
-                          setIcr(tempIcr);
-                          setIsEditingIcr(false);
-                        }}
-                      >
-                        <Save size={16} />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
-                        onClick={() => setIsEditingIcr(false)}
-                      >
-                        <X size={16} />
-                      </Button>
+              <CardContent className="space-y-2">
+                <div className="flex justify-between items-center px-3 py-2 bg-blue-50 rounded-lg border">
+                  {isEditingUserInfo ? (
+                    <div className="flex flex-col items-center gap-1 w-full">
+                      <div className="flex flex-row items-center gap-2 w-full">
+                        <Label className="font-semibold text-md">Target BG<span className="text-gray-500 text-xs font-normal">(80 - 110)</span></Label>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="\d*"
+                          placeholder={String(user.targetBG)}
+                          value={updatedUserInfo.targetBG !== undefined ? String(updatedUserInfo.targetBG) : ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (/^\d*$/.test(val)) {
+                              setUpdatedUserInfo({
+                                ...updatedUserInfo,
+                                targetBG: val === "" ? undefined : Number(val),
+                              });
+                            }
+                          }}
+                          className="w-20 h-7 ml-auto border-black"
+                        />
+                      </div>
+
+                      <div className="flex flex-row items-center gap-2 w-full">
+                        <Label className="font-semibold text-md">IC Ratio<span className="text-gray-500 text-xs font-normal">(10 - 15)</span></Label>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="\d*"
+                          placeholder={String(user.icRatio)}
+                          value={updatedUserInfo.icRatio !== undefined ? String(updatedUserInfo.icRatio) : ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (/^\d*$/.test(val)) {
+                              setUpdatedUserInfo({
+                                ...updatedUserInfo,
+                                icRatio: val === "" ? undefined : Number(val),
+                              });
+                            }
+                          }}
+                          className="w-20 h-7 ml-auto border-black"
+                        />
+                      </div>
+
+                      <div className="flex flex-row items-center gap-2 w-full">
+                        <Label className="font-semibold text-md">Correction<span className="text-gray-500 text-xs font-normal">(30-100)</span></Label>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="\d*"
+                          placeholder={String(user.correctionFactor)}
+                          value={updatedUserInfo.correctionFactor !== undefined ? String(updatedUserInfo.correctionFactor) : ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (/^\d*$/.test(val)) {
+                              setUpdatedUserInfo({
+                                ...updatedUserInfo,
+                                correctionFactor: val === "" ? undefined : Number(val),
+                              });
+                            }
+                          }}
+                          className="w-20 h-7 ml-auto border-black"
+                        />
+                      </div>
+
+                      <div className="flex flex-row items-center gap-2 w-full">
+                        <Label className="font-semibold text-md">Eat Countdown<span className="text-gray-500 text-xs font-normal">(15 - 60)</span></Label>
+                        <Input
+                          type="text"
+                          inputMode="numeric"
+                          pattern="\d*"
+                          placeholder={String(user.eatCountdown)}
+                          value={updatedUserInfo.eatCountdown !== undefined ? String(updatedUserInfo.eatCountdown) : ""}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            if (/^\d*$/.test(val)) {
+                              setUpdatedUserInfo({
+                                ...updatedUserInfo,
+                                eatCountdown: val === "" ? undefined : Number(val),
+                              });
+                            }
+                          }}
+                          className="w-20 h-7 ml-auto border-black"
+                        />
+                      </div>
+                      <div className="flex flex-row w-full gap-2">
+                        <Button
+                          size="icon"
+                          className="h-8 bg-green-500 flex-1"
+                          onClick={() => {
+                            mutateUpdateUser(updatedUserInfo)
+                            setIsEditingUserInfo(false);
+                          }}
+                          disabled={updateUserPending}
+                        >
+                          Save <Save size={16} />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-8 flex-1"
+                          onClick={() => {
+                            setIsEditingUserInfo(false)
+                            setUpdatedUserInfo(user)
+                          }}
+                          disabled={updateUserPending}
+                        >
+                          Cancel <X size={16} />
+                        </Button>
+                      </div>
+                      <span className="text-gray-500 text-sm font-normal mb-1">(...) = recommended ranges by medical info</span>
                     </div>
                   ) : (
-                    <div className="flex items-center gap-2">
-                      <span className="font-semibold">1 unit / {icr}g</span>
+                    <div className="flex flex-col items-center gap-2 w-full">
+                      <div className="flex flex-row w-full">
+                        <span className="font-semibold">Target BG : </span>
+                        <span className="ml-auto">{user.targetBG} mg/dL</span>
+                      </div>
+                      <div className="flex flex-row w-full">
+                        <span className="font-semibold">IC Ratio : </span>
+                        <span className="ml-auto">1 unit / {user.icRatio}g</span>
+                      </div>
+                      <div className="flex flex-row w-full">
+                        <span className="font-semibold">Correction : </span>
+                        <span className="ml-auto flex flex-row items-center">1 unit <ArrowDown className="w-5 h-5"/> {user.correctionFactor} mg/dL</span>
+                      </div>
+                      <div className="flex flex-row w-full">
+                        <span className="font-semibold">Eat Countdown : </span>
+                        <span className="ml-auto">{user.eatCountdown} minutes</span>
+                      </div>
                       <Button
                         size="icon"
-                        variant="ghost"
-                        className="h-8 w-8"
+                        variant="outline"
+                        className="h-8 w-full"
                         onClick={() => {
                           setTempIcr(icr);
-                          setIsEditingIcr(true);
+                          setIsEditingUserInfo(true);
                         }}
-                        disabled={doseConfirmed}
+                        disabled={updateUserPending}
                       >
-                        <Edit size={16} />
+                        Edit User Preference <Edit size={16} />
                       </Button>
                     </div>
                   )}
