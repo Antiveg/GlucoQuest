@@ -70,3 +70,16 @@ export function useCreateGlucoseReading(date : string) {
     },
   });
 }
+
+async function fetchMostRecentGlucoseReadingByUserId() {
+  const res = await fetch(`/api/user/glucose-readings/recent`);
+  if (!res.ok) throw new Error("Failed to fetch the intended glucose readings");
+  return res.json();
+}
+
+export function useMostRecentGlucoseReadingByUserId() {
+  return useQuery<GlucoseReading, Error>({
+    queryKey: ["user-glucose-readings-recent"],
+    queryFn: () => fetchMostRecentGlucoseReadingByUserId(),
+  });
+}

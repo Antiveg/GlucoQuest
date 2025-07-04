@@ -47,3 +47,29 @@ export const createMealWithFoodsQuery = async (input: Prisma.MealCreateInput) =>
     });
     return createdMeal
 }
+
+export const getTotalCarbsByUserIdQuery = async (userId: number) => {
+    const currentDate = new Date();
+    const timezoneOffsetMinutes = 420;
+
+  const startOfDayUTC = new Date(
+    currentDate.getTime() - timezoneOffsetMinutes * 60 * 1000
+  );
+  startOfDayUTC.setUTCHours(0, 0, 0, 0);
+  const endOfDayUTC = new Date(startOfDayUTC.getTime() + 24 * 60 * 60 * 1000);
+
+  const result = await prisma.meal.aggregate({
+    where: {
+      userId,
+      createdAt: {
+        gte: startOfDayUTC,
+        lt: endOfDayUTC,
+      },
+    },
+    _sum: {
+      totalCarbs: true,
+    },
+  });
+
+  return result._sum.totalCarbs ?? 0;
+};
