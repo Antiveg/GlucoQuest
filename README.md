@@ -37,6 +37,13 @@ People with Type 1 diabetes face numerous daily challenges, such as monitoring b
 
 ---
 
+## 🎥 Demo & 📄 Proposal
+
+* 📽️ [Watch the Demo Video](https://binusianorg-my.sharepoint.com/personal/nathaniel_alexander_binus_ac_id/_layouts/15/guestaccess.aspx?share=EWgUNbrraKxLtU7By0_YKewBUlLqGnwN_dX-sksMmb51hg&nav=eyJyZWZlcnJhbEluZm8iOnsicmVmZXJyYWxBcHAiOiJTdHJlYW1XZWJBcHAiLCJyZWZlcnJhbFZpZXciOiJTaGFyZURpYWxvZy1MaW5rIiwicmVmZXJyYWxBcHBQbGF0Zm9ybSI6IldlYiIsInJlZmVycmFsTW9kZSI6InZpZXcifX0%3D&e=ZrcjJ2)
+* 📘 [Read the Project Proposal](https://docs.google.com/document/d/1b2IzKehUlfrC5O4tOgTIOG2H4hZYEy4e1CgMe7uaZiU/edit?usp=sharing)
+
+---
+
 ## 🚀 Getting Started
 
 1. **Clone the repository**
@@ -63,7 +70,6 @@ People with Type 1 diabetes face numerous daily challenges, such as monitoring b
 
    * Replace `[password]` with your PostgreSQL password.
    * Replace `[dbname]` with your PostgreSQL database name.
-
 
 4. **Run the development server**
 
