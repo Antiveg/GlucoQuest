@@ -42,7 +42,7 @@ People with Type 1 diabetes face numerous daily challenges, such as monitoring b
 1. **Clone the repository**
 
    ```bash
-   git clone https://github.com/your-username/glucoquest.git
+   git clone https://github.com/Antiveg/GlucoQuest.git
    cd glucoquest
    ```
 
