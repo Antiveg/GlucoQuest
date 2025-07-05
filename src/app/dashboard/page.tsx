@@ -16,9 +16,9 @@ import Loading from "@/components/loading";
 import { ReminderCarousel } from "@/components/dashboard/ReminderCarousel";
 import Link from "next/link";
 import { useRecentNotificationsByUserId } from "@/lib/client-queries/notifications";
-import { formatDistanceToNow } from "date-fns";
 import { useMostRecentGlucoseReadingByUserId } from "@/lib/client-queries/glucose-readings";
 import { useFetchTotalCarbsByUserId } from "@/lib/client-queries/meals-with-foods";
+import { formatDateTimeUTC } from "@/lib/utils";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -95,7 +95,8 @@ export default function DashboardPage() {
                     </p>
                   ) : glucoseReadingIsError ? (
                     <p className="text-center text-gray-700 italic">
-                      Error: {glucoseReadingError.message}
+                      {/* Error: {glucoseReadingError.message} */}
+                      No reading
                     </p>
                   ) : !glucoseReading ? (
                     <p className="text-center text-gray-700 italic">
@@ -127,7 +128,8 @@ export default function DashboardPage() {
                     </p>
                   ) : totalCarbsIsError ? (
                     <p className="text-center text-gray-700 italic">
-                      Error: {totalCarbsError.message}
+                      {/* Error: {totalCarbsError.message} */}
+                      No reading
                     </p>
                   ) : !totalCarbs ? (
                     <p className="text-center text-gray-700 italic">
@@ -223,12 +225,9 @@ export default function DashboardPage() {
                         color="text-blue-500"
                         title={notification.title}
                         description={notification.description}
-                        time={formatDistanceToNow(
-                          new Date(notification.createdAt),
-                          {
-                            addSuffix: true,
-                          }
-                        )}
+                        time={
+                          notification.createdAt
+                        }
                       />
                     ))}
 
@@ -293,7 +292,7 @@ const AlertItem = ({
     <div>
       <p className="font-bold">{title}</p>
       <p className="text-sm text-gray-600">{description}</p>
-      <p className="text-xs text-gray-400 mt-1">{time}</p>
+      <p className="text-xs text-gray-400 mt-1">{formatDateTimeUTC(time)}</p>
     </div>
   </div>
 );
